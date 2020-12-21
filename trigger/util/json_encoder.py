@@ -9,7 +9,7 @@ import numpy
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
             if dataclasses.is_dataclass(o):
-                return dataclasses.asdict(o)
+                return { o.__class__.__name__ : dataclasses.asdict(o) } 
             if isinstance(o, Enum):
                 return o.name
             if type(o).__module__ == numpy.__name__:
