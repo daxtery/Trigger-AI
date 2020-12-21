@@ -2,70 +2,42 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy
 
-from trigger.train.cluster.Processor import Processor
-from scipy.spatial.distance import cdist, euclidean, cosine
+from trigger.train.cluster.processor import Processor
+from scipy.spatial.distance import cdist
 
 import numpy as np
 
 from enum import Enum
 
-from ....metrics.match import similarity_metric
-
 
 class Cluster:
-    def __init__(self, tag: str, center: numpy.ndarray, custom: Any, index: int) -> None:
+    def __init__(self, tag: str, center: numpy.ndarray, index: int) -> None:
         self.center = center
         self.radius = 0
-        self.tag_to_instance: Dict[str, numpy.ndarray] = {
-            tag: center
-        }
-        self.tag_to_custom: Dict[str, numpy.ndarray] = {
-            tag: custom
-        }
+        self.tags = [tag]
         self.index = index
 
-    def add_radius(self, tag: str, instance: numpy.ndarray, custom: Any) -> None:
-        self.tag_to_instance[tag] = instance
-        self.tag_to_custom[tag] = custom
+    def add_radius(self, tag: str, instance: numpy.ndarray) -> None:
+        self.tags.append(tag)
 
     def _adapt(self, distance: float, instance: numpy.ndarray):
         direction = instance - self.center
         self.radius = distance / 2
         self.center = instance - (direction / np.linalg.norm(direction)) * self.radius
 
-    def add_threshold(self, distance: float, tag: str, instance: numpy.ndarray, custom: Any) -> None:
-        self.add_radius(tag, instance, custom)
+    def add_threshold(self, distance: float, tag: str, instance: numpy.ndarray) -> None:
+        self.add_radius(tag, instance)
         self._adapt(distance, instance)
 
-    def update_radius(self, tag: str, instance: numpy.ndarray, custom: Any) -> None:
-        self.tag_to_instance[tag] = instance
-        self.tag_to_custom[tag] = custom
+    def update_radius(self, tag: str, instance: numpy.ndarray) -> None:
+        pass
 
-    def update_threshold(self, distance: float, tag: str, instance: numpy.ndarray, custom: Any) -> None:
-        self.update_radius(tag, instance, custom)
+    def update_threshold(self, distance: float, tag: str, instance: numpy.ndarray) -> None:
+        self.update_radius(tag, instance)
         self._adapt(distance, instance)
 
     def remove(self, tag: str) -> None:
-        del self.tag_to_instance[tag]
-        del self.tag_to_custom[tag]
-
-    def delta_score(self):
-        if len(self.tag_to_instance) == 1:
-            node_similarities = [1.0]
-
-        else:
-            node_similarities = [
-                similarity_metric(test_instance, compare_instance)
-                for i, test_instance in enumerate(list(self.tag_to_instance.values())[:-1])
-                for compare_instance in list(self.tag_to_instance.values())[i + 1:]
-            ]
-
-        sim_mean = np.mean(node_similarities)
-        sim_std = np.std(node_similarities)
-
-        node_dispersion = sim_std / sim_mean
-
-        return (node_dispersion - 1) / (np.power(5, 0.5) / 5)
+        self.tags.remove(tag)
 
 
 class SearchResultType(Enum):
@@ -79,19 +51,14 @@ class ECM(Processor):
     def __init__(self, distance_threshold: float) -> None:
         self.clusters: Dict[int, Cluster] = {}
         self.distance_threshold = distance_threshold
-        self.did_first_add = False
         self.tag_to_cluster: Dict[str, int] = {}
-        self.tag_to_instance: Dict[str, tuple] = {}
         self.cluster_index = 0
+
         self.cached_cluster_keys: List[int] = []
         self.cached_cluster_centers: List[float] = []
         self.cached_cluster_radiuses: List[float] = []
 
-    @property
-    def instances(self) -> List[tuple]:
-        return list(self.tag_to_instance.values())
-
-    def update(self, tag: str, instance: numpy.ndarray, custom_data: Any = None) -> None:
+    def update(self, tag: str, instance: numpy.ndarray) -> None:
         result, (searched_index, searched_distance) = self._search_index_and_distance(instance)
         old_index = self.get_cluster_by_tag(tag)
         old_cluster = self.clusters[old_index]
@@ -99,47 +66,46 @@ class ECM(Processor):
         if result == SearchResultType.OUTSIDE:
             self._remove_from_cluster(old_cluster, tag)
 
-            cluster = self._create_cluster(tag, instance, custom_data)
+            cluster = self._create_cluster(tag, instance)
             index = cluster.index
 
         elif result == SearchResultType.RADIUS:
             if searched_index == old_index:
-                old_cluster.update_radius(tag, instance, custom_data)
+                old_cluster.update_radius(tag, instance)
 
                 index = searched_index
             else:
                 self._remove_from_cluster(old_cluster, tag)
 
                 new_cluster = self.clusters[searched_index]
-                new_cluster.add_radius(tag, instance, custom_data)
+                new_cluster.add_radius(tag, instance)
 
                 index = searched_index
 
         # elif result == SearchResultType.THRESHOLD:
         else:
             if searched_index == old_index:
-                old_cluster.update_threshold(searched_distance, tag, instance, custom_data)
+                old_cluster.update_threshold(searched_distance, tag, instance)
 
                 index = searched_index
             else:
                 self._remove_from_cluster(old_cluster, tag)
 
                 new_cluster = self.clusters[searched_index]
-                new_cluster.add_threshold(searched_distance, tag, instance, custom_data)
+                new_cluster.add_threshold(searched_distance, tag, instance)
 
                 index = searched_index
 
         self.tag_to_cluster[tag] = index
-        self.tag_to_instance[tag] = tuple(instance)
         self._invalidate_cached()
 
     def _remove_from_cluster(self, cluster: Cluster, tag: str) -> None:
         cluster.remove(tag)
-        if len(cluster.tag_to_instance) == 0:
+        if len(cluster.tags) == 0:
             del self.clusters[cluster.index]
 
-    def _create_cluster(self, tag: str, instance: numpy.ndarray, custom_data: Any = None) -> Cluster:
-        cluster = Cluster(tag, instance, custom_data, self.cluster_index)
+    def _create_cluster(self, tag: str, instance: numpy.ndarray) -> Cluster:
+        cluster = Cluster(tag, instance, self.cluster_index)
         self.clusters[self.cluster_index] = cluster
         self.cluster_index += 1
         return cluster
@@ -149,7 +115,6 @@ class ECM(Processor):
         cluster = self.clusters[index]
 
         del self.tag_to_cluster[tag]
-        del self.tag_to_instance[tag]
 
         self._remove_from_cluster(cluster, tag)
         self._invalidate_cached()
@@ -157,41 +122,32 @@ class ECM(Processor):
     def get_cluster_by_tag(self, tag: str) -> Optional[int]:
         return self.tag_to_cluster.get(tag, None)
 
-    def get_instances_and_tags_in_cluster(self, cluster_id: int) -> Tuple[List[numpy.ndarray], List[str]]:
-        tag_to_instance = self.clusters[cluster_id].tag_to_instance
-        return list(tag_to_instance.values()), list(tag_to_instance.keys())
+    def get_tags_in_cluster(self, cluster_id: int) -> List[str]:
+        return self.clusters[cluster_id].tags
 
-    def get_all_instances_with_tags(self) -> Tuple[List[numpy.ndarray], List[str]]:
-        tags = []
-        instances = []
-        for index, cluster in self.clusters.items():
-            c_instances, c_tags = self.get_instances_and_tags_in_cluster(index)
-            tags.extend(c_tags)
-            instances.extend(c_instances)
-        return instances, tags
+    def get_cluster_ids(self) -> List[int]:
+        return list(self.clusters.keys())
 
-    def process(self, tag: str, instance: numpy.ndarray, custom_data: Any = None) -> None:
-        if not self.did_first_add:
-            cluster = self._create_cluster(tag, instance, custom_data)
-            self.did_first_add = True
+    def process(self, tag: str, instance: numpy.ndarray) -> None:
+        if len(self.clusters) == 0:
+            cluster = self._create_cluster(tag, instance)
 
         else:
             search_result, (index, distance) = self._search_index_and_distance(instance)
 
             if search_result == SearchResultType.RADIUS:
                 cluster = self.clusters[index]
-                cluster.add_radius(tag, instance, custom_data)
+                cluster.add_radius(tag, instance)
 
             elif search_result == SearchResultType.THRESHOLD:
                 cluster = self.clusters[index]
-                cluster.add_threshold(distance, tag, instance, custom_data)
+                cluster.add_threshold(distance, tag, instance)
 
             # search_result == SearchResultType.OUTSIDE
             else:
-                cluster = self._create_cluster(tag, instance, custom_data)
+                cluster = self._create_cluster(tag, instance)
 
         self.tag_to_cluster[tag] = cluster.index
-        self.tag_to_instance[tag] = tuple(instance)
         self._invalidate_cached()
 
     def _invalidate_cached(self):
@@ -261,7 +217,7 @@ class ECM(Processor):
 
     def predict(self, instance: Any) -> Optional[int]:
         # FIXME: What should predict do in this case?
-        if not self.did_first_add:
+        if len(self.clusters) == 0:
             return None
 
         search_result, (index, distance) = self._search_index_and_distance(instance)
@@ -275,23 +231,3 @@ class ECM(Processor):
 
         elif search_result == SearchResultType.RADIUS:
             return index
-
-    def get_custom_data_by_tag(self, tag: str) -> Optional[Any]:
-        # TODO: We assume the tag exists?
-        index = self.get_cluster_by_tag(tag)
-        return self.clusters[index].tag_to_custom.get(tag, None)
-
-    def get_instance_by_tag(self, tag: str) -> Optional[numpy.ndarray]:
-        return self.tag_to_instance.get(tag, None)
-
-    def compute_cluster_score(self) -> float:
-        node_scores = []
-
-        for cluster in self.clusters.values():
-            node_dispersion_delta = cluster.delta_score()
-            node_delta = np.power(node_dispersion_delta, 2)
-
-            node_score = numpy.ex(-(node_delta)) * np.log(len(cluster.tag_to_instance))
-            node_scores.append(node_score)
-
-        return np.sum(node_scores)

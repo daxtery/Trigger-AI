@@ -1,7 +1,7 @@
 import numpy
 from trigger.train.operation import AddInfo, Operation, OperationType
 from trigger.test.test_operations_runner import TestRunner
-from trigger.train.cluster.ecm.ecm import ECM
+from trigger.train.cluster.ecm import ECM
 from trigger.train.trigger_interface import TriggerInterface
 
 ecm = ECM(distance_threshold=0.5)

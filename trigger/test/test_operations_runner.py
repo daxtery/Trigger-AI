@@ -13,7 +13,7 @@ import json
 import itertools
 import os
 
-from trigger.train.cluster.Processor import Processor
+from trigger.train.cluster.processor import Processor
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_runner')

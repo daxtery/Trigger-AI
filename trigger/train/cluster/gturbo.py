@@ -1,20 +1,70 @@
+import heapq
+
 from typing import Any, List, Tuple, Optional, Dict
 
-import numpy
 import numpy as np
 import faiss
 
-from scipy.spatial.distance import cosine
 from scipy.spatial.distance import cdist
 
-from trigger.models.match import Match
+from trigger.train.cluster.processor import Processor
 
-from trigger.train.cluster.gturbo.graph import Graph
-from trigger.train.cluster.gturbo.node import Node
-from trigger.train.cluster.gturbo.link import Link
-from trigger.train.transformers.opening_transformer import OpeningInstance
+import numpy as np
 
-from trigger.train.cluster.Processor import Processor
+from typing import List, Dict
+
+class Node:
+
+    def __init__(self, protype, error: float, id: int, error_cycle: int, radius: float) -> None:
+
+        self.protype = protype
+        self.error = error
+        self.topological_neighbors: Dict[int, "Node"] = {}
+        self.instances = []
+        self.error_cycle = error_cycle
+        self.id = id
+        self.radius = radius
+
+    def __lt__(self, other: "Node"):
+
+        return self.error > other.error
+
+    def add_neighbor(self, neighbor: "Node") -> None:
+
+        self.topological_neighbors[neighbor.id] = neighbor
+
+    def add_instance(self, instance) -> None:
+
+        self.instances.append(instance)
+
+    def remove_neighbor(self, neighbor: "Node") -> None:
+
+        self.topological_neighbors.pop(neighbor.id)
+
+    def remove_instance(self, instance):
+
+        self.instances.remove(instance)
+
+    def update_error_cycle(self, cycle: int) -> None:
+
+        self.error_cycle = cycle
+
+
+class Link:
+
+    def __init__(self, v: Node, u: Node) -> None:
+
+        self.age = 0
+        self.v = v
+        self.u = u
+
+    def fade(self) -> None:
+
+        self.age += 1
+
+    def renew(self) -> None:
+
+        self.age = 0
 
 
 class GTurbo(Processor):
@@ -38,8 +88,6 @@ class GTurbo(Processor):
 
         self.next_id = 2
         self.point_to_cluster = {}
-        self.instances = {}
-        self.tag_to_data = {}
 
         self.cycle = 0
         self.step = 1
@@ -153,7 +201,6 @@ class GTurbo(Processor):
         if self.distance(v.protype, instance) <= v.radius:
 
             v.add_instance(tag)
-            self.instances[tag] = instance
 
             self.point_to_cluster[tag] = v.id
 
@@ -185,7 +232,6 @@ class GTurbo(Processor):
             r = self.create_node_from_instance(instance, self.r0)
             r.add_instance(tag)
 
-            self.instances[tag] = instance
             self.point_to_cluster[tag] = r.id
 
             self.create_link(v, r)
@@ -248,26 +294,20 @@ class GTurbo(Processor):
 
             self.graph.remove_link(v, u)
 
-    def get_cluster(self, instance) -> int:
-
-        return self.point_to_cluster.get(instance)
-
-    def process(self, tag: str, instance: np.ndarray, custom_data: Any = None) -> None:
+    def process(self, tag: str, instance: np.ndarray) -> None:
 
         self.turbo_step(tag, instance)
-        self.tag_to_data[tag] = custom_data
 
-    def update(self, tag: str, instance: np.ndarray, custom_data: Any = None) -> None:
+    def update(self, tag: str, instance: np.ndarray) -> None:
 
         self.remove(tag)
 
-        self.process(tag, instance, custom_data)
+        self.process(tag, instance)
 
     def remove(self, tag: str) -> None:
 
         node_id = self.point_to_cluster.pop(tag)
-        self.instances.pop(tag)
-        self.tag_to_data.pop(tag)
+        del self.point_to_cluster[tag]
 
         node = self.graph.get_node(node_id)
         node.remove_instance(tag)
@@ -276,28 +316,16 @@ class GTurbo(Processor):
 
         return self.point_to_cluster[tag]
 
-    def get_custom_data_by_tag(self, tag: str) -> Optional[Any]:
+    def get_tags_in_cluster(self, cluster_id: int) -> List[str]:
 
-        return self.tag_to_data[tag]
-
-    def get_instance_by_tag(self, tag: str) -> Optional[numpy.ndarray]:
-
-        return self.instances.get(tag, None)
-
-    def get_instances_and_tags_in_cluster(self, cluster_id: int) -> Tuple[List[np.ndarray], List[str]]:
-
-        tags = [tag for tag, id in self.point_to_cluster.items() if id ==
+        return [tag for tag, id in self.point_to_cluster.items() if id ==
                 cluster_id]
-        instances = [self.instances[tag] for tag in tags]
-
-        return (instances, tags)
-
-    def get_all_instances_with_tags(self) -> Tuple[List[np.ndarray], List[str]]:
-
-        instances = [instance for instance in self.instances.values()]
-        tags = [tag for tag in self.instances.keys()]
-
-        return (instances, tags)
+    
+    def get_cluster_ids(self) -> List[int]:
+        return [
+            node
+            for node in self.graph.nodes
+        ]
 
     def predict(self, instance: np.ndarray) -> int:
 
@@ -322,76 +350,71 @@ class GTurbo(Processor):
 
         return f"GTurbo = epsilon_b={self.epsilon_b};epsilon_n={self.epsilon_n};lam={self.lam};beta={self.beta};alpha={self.alpha};max_age={self.max_age};radius={self.r0}"
 
-    def compute_cluster_score(self) -> float:
 
-        instance_dist = self._get_instances_per_node()
+class Graph:
 
-        node_scores = []
+    def __init__(self) -> None:
 
-        for node in self.graph.nodes.values():
+        self.nodes: Dict[int, Node] = {}
+        self.links: Dict[Tuple[int, int], Link] = {}
+        self.heap = []
 
-            if len(node.instances) > 0:
+    def update_heap(self) -> None:
 
-                node_dispersion_delta = self._compute_node_delta(node)
-                node_delta = np.power(node_dispersion_delta, 2)
+        heapq.heapify(self.heap)
 
-                node_score = np.exp(-(node_delta))*np.log(len(node.instances))
-                node_scores.append(node_score)
+    def insert_node(self, node: Node) -> None:
 
-        return np.sum(node_scores)
+        self.nodes[node.id] = node
+        heapq.heappush(self.heap, node)
 
-    def _get_instances_per_node(self):
+    def remove_node(self, node: Node) -> None:
 
-        return [len(node.instances) for node in self.graph.nodes.values() if len(node.instances) > 0]
+        for u in node.topological_neighbors.values():
 
-    def _mean_instances_per_node(self, num_instances):
+            self.remove_link(node, u)
 
-        return np.mean(num_instances)
+        self.nodes.pop(node.id)
 
-    def _std_instances_per_node(self, num_instances):
+        self.heap.remove(node)
+        heapq.heapify(self.heap)
         
-        return np.std(num_instances)
+    def get_node(self, id) -> Node:
 
-    def _compute_node_delta(self, node):
+        return self.nodes[id]
 
-        instances = node.instances
+    def insert_link(self, v: Node, u: Node, link) -> None:
 
-        if len(node.instances) == 1:
+        self.links[(v.id, u.id)] = link
 
-            node_similarities = [1.0]
+    def remove_link(self, v: Node, u: Node) -> None:
 
-        else:
+        if self.links.get((v.id, u.id), None) != None:
 
-            node_similarities = self._get_similarities(instances)
+            self.links.pop((v.id, u.id))
 
-        sim_mean = self._get_mean_similarity(node_similarities)
-        sim_std = self._get_std_similarity(node_similarities)
+        elif self.links.get((u.id, v.id), None) != None:
+            self.links.pop((u.id, v.id))
+            
 
-        node_dispersion = sim_std / sim_mean
+    def has_link(self, v: Node, u: Node) -> bool:
 
-        return (node_dispersion - 1) / (np.power(5, 0.5) / 5)
+        return (self.links.get((v.id, u.id), None) != None) or (self.links.get((u.id, v.id), None) != None)
+            
+    def get_link(self, v: Node, u: Node) -> Optional[Link]:
 
-    def _get_similarities(self, instances):
+        link = self.links.get((v.id, u.id), None)
 
-        node_similarities = []
+        if link != None:
 
-        for i in range(len(instances) - 1):
+            return link
 
-            test_instance = self.instances[instances[i]]
+        return self.links.get((u.id, v.id), None)
 
-            for j in range(i + 1, len(instances)):
+    def get_q_and_f(self) -> Tuple[Node, Node]:
 
-                compare_instance = self.instances[instances[j]]
+        q = self.heap[0]
+        f = sorted(q.topological_neighbors.values(), 
+                                    key=lambda node: node.error, reverse=True)[0]
 
-                cos_sim = 1 - cosine(test_instance, compare_instance)
-                node_similarities.append(cos_sim)
-
-        return node_similarities
-
-    def _get_mean_similarity(self, similarities):
-
-        return np.mean(similarities)
-
-    def _get_std_similarity(self, similarities):
-
-        return np.var(similarities)
+        return (q, f)

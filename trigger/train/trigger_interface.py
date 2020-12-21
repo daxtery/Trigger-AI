@@ -5,7 +5,7 @@ from trigger.train.operation import AddInfo, CalculateMatchesInfo, EvaluateClust
 from trigger.train.scoring import Scoring
 import numpy
 from trigger.train.transformers.transformer_pipeline import Instance, TransformerPipeline
-from trigger.train.cluster.Processor import Processor
+from trigger.train.cluster.processor import Processor
 
 from typing import Any, Dict, List, Optional
 
@@ -93,7 +93,7 @@ class TriggerInterface:
         
         would_be_cluster_id = self.processor.predict(instance.embedding)
 
-        _, tags = self.processor.get_instances_and_tags_in_cluster(would_be_cluster_id)
+        _, tags = self.processor.get_tags_in_cluster(would_be_cluster_id)
 
         temp = [
             self.calculate_scoring_between_instance_and_tag_or_none(instance, tag)
@@ -172,7 +172,7 @@ class TriggerInterface:
             
         elif operation.type == OperationType.EVALUATE_CLUSTERS:
             evaluate_clusters_info: EvaluateClustersInfo = operation.info
-            return eval_cluster(self.processor)
+            return eval_cluster(self)
             
         elif operation.type == OperationType.EVALUATE_MATCHES:
 
@@ -182,7 +182,7 @@ class TriggerInterface:
         elif operation.type == OperationType.EVALUATE_CLUSTERS_AND_MATCHES:
             evaluate_clusters_and_matches_info: EvaluateClustersAndMatchesInfo = operation.info
 
-            clusters_evaluation = eval_cluster(self.processor)
+            clusters_evaluation = eval_cluster(self)
             matches_evaluation = eval_matches(self, evaluate_clusters_and_matches_info.values)
 
             results = clusters_evaluation
