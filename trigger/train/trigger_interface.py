@@ -93,7 +93,7 @@ class TriggerInterface:
         
         would_be_cluster_id = self.processor.predict(instance.embedding)
 
-        _, tags = self.processor.get_tags_in_cluster(would_be_cluster_id)
+        tags = self.processor.get_tags_in_cluster(would_be_cluster_id)
 
         temp = [
             self.calculate_scoring_between_instance_and_tag_or_none(instance, tag)

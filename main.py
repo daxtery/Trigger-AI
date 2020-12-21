@@ -1,19 +1,19 @@
+from trigger.train.cluster.gturbo import GTurbo
 import numpy
 from trigger.train.operation import AddInfo, Operation, OperationType
 from trigger.test.test_operations_runner import TestRunner
-from trigger.train.cluster.ecm import ECM
-from trigger.train.trigger_interface import TriggerInterface
 
-ecm = ECM(distance_threshold=0.5)
-
-interface = TriggerInterface(ecm, {})
-
-param_grid = {
-    "distance_threshold": [0.4, 0.5, 0.6, 0.7, 0.8]
-}
+param_grid = {"epsilon_b": [0.01],
+                "epsilon_n": [0],
+                "lam": [500],
+                "beta": [0.9995],
+                "alpha": [0.95],
+                "max_age": [500],
+                "r0": [0.5, 1, 2.5]
+            }
 
 t = TestRunner(
-    ECM,
+    GTurbo,
     param_grid,
     [
         Operation(OperationType.ADD, AddInfo(tag="1", value=numpy.array([1, 1]))),
