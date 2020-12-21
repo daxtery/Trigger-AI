@@ -96,7 +96,7 @@ class TestRunner:
             result = interface.on_operation(operation)
 
             if result:
-                results.append((operation, result))
+                results.append({ "Operation": operation, "Result": result })
             elif not self.only_output_evaluates:
                 results.append(operation)
 
