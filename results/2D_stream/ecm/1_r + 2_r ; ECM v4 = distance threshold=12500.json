@@ -1,0 +1,24 @@
+{
+    "used algorithm": {
+        "name": "ECM",
+        "parameters": {
+            "distance threshold": 12500
+        }
+    },
+    "test": {
+        "name": "1_r + 2_r",
+        "path": "./examples/2D_stream/2_r",
+        "description": "",
+        "inputs": [],
+        "correct": []
+    },
+    "time to add": "0.1201 seconds",
+    "time to predict": "0.0017 seconds",
+    "clusters": [],
+    "scores": {
+        "sklearn.metrics.cluster.adjusted_rand_score": "-",
+        "sklearn.metrics.silhouette_score": "0.25046664",
+        "sklearn.metrics.calinski_harabasz_score": 892.6521437904207
+    },
+    "figure": "results/2D_stream/ecm/1_r + 2_r ; ECM v4 = distance threshold=12500.jpg"
+}

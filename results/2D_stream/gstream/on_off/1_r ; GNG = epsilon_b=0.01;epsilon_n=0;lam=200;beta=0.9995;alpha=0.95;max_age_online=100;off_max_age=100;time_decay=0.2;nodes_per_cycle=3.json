@@ -1,0 +1,32 @@
+{
+    "used_algorithm": {
+        "name": "GNG",
+        "parameters": {
+            "epsilon_b": 0.01,
+            "epsilon_n": 0,
+            "lam": 200,
+            "beta": 0.9995,
+            "alpha": 0.95,
+            "max_age_online": 100,
+            "off_max_age": 100,
+            "time_decay": 0.2,
+            "nodes_per_cycle": 3
+        }
+    },
+    "test": {
+        "name": "1_r",
+        "path": "./examples/2D_stream/1_r",
+        "description": "",
+        "inputs": [],
+        "correct": []
+    },
+    "time to add": "-",
+    "time to predict": "-",
+    "clusters": [],
+    "scores": {
+        "sklearn.metrics.cluster.adjusted_rand_score": "-",
+        "sklearn.metrics.silhouette_score": "0.22142263",
+        "sklearn.metrics.calinski_harabasz_score": "6111.643050331842"
+    },
+    "plot_path": "./results/2D_stream/gstream/on_off"
+}

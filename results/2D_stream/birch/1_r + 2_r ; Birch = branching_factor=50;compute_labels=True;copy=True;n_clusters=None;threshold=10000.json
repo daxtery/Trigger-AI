@@ -1,0 +1,28 @@
+{
+    "used algorithm": {
+        "name": "Birch",
+        "parameters": {
+            "branching_factor": 50,
+            "compute_labels": true,
+            "copy": true,
+            "n_clusters": null,
+            "threshold": 10000
+        }
+    },
+    "test": {
+        "name": "1_r + 2_r",
+        "path": "./examples/2D_stream/2_r",
+        "description": "",
+        "inputs": [],
+        "correct": []
+    },
+    "time to add": "0.4418 seconds",
+    "time to predict": "0.3916 seconds",
+    "clusters": [],
+    "scores": {
+        "sklearn.metrics.cluster.adjusted_rand_score": "-",
+        "sklearn.metrics.silhouette_score": "0.29047102",
+        "sklearn.metrics.calinski_harabasz_score": 959.0575436708542
+    },
+    "figure": "results/2D_stream/birch/1_r + 2_r ; Birch = branching_factor=50;compute_labels=True;copy=True;n_clusters=None;threshold=10000.svg"
+}
