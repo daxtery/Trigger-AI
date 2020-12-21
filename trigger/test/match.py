@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 def eval_matches(interface: "TriggerInterface",
                  values_to_match: List[CalculateMatchesInfo[Any]],
-                 individual_matched_fetch_instance: bool = False,
+                 fetch_matched_value: bool = False,
                  ):
 
     by_value = []
@@ -43,7 +43,7 @@ def eval_matches(interface: "TriggerInterface",
             for match in matches
         ]
 
-        if individual_matched_fetch_instance:
+        if fetch_matched_value:
             save_matches = [
                 (match, interface.get_instances_by_tag([match.with_tag])[0])
                 for match in matches

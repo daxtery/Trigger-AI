@@ -39,6 +39,7 @@ class RemoveInfo():
 class CalculateMatchesInfo(Generic[T]):
     value: T
     transformer_key: Optional[str] = None
+    fetch_matched_value: bool = False
 
 
 @dataclass()
@@ -49,6 +50,7 @@ class EvaluateClustersInfo():
 @dataclass()
 class EvaluateMatchesInfo():
     values: List[CalculateMatchesInfo]
+    fetch_matched_value: bool = False
 
 
 @dataclass()

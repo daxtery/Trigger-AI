@@ -1,16 +1,17 @@
 from trigger.train.cluster.gturbo import GTurbo
 import numpy
-from trigger.train.operation import AddInfo, Operation, OperationType
+from trigger.train.operation import AddInfo, CalculateMatchesInfo, Operation, OperationType
 from trigger.test.test_operations_runner import TestRunner
 
-param_grid = {"epsilon_b": [0.01],
-                "epsilon_n": [0],
-                "lam": [500],
-                "beta": [0.9995],
-                "alpha": [0.95],
-                "max_age": [500],
-                "r0": [0.5, 1, 2.5]
-            }
+param_grid = {
+    "epsilon_b": [0.01],
+    "epsilon_n": [0],
+    "lam": [500],
+    "beta": [0.9995],
+    "alpha": [0.95],
+    "max_age": [500],
+    "r0": [0.5, 1, 2.5]
+}
 
 t = TestRunner(
     GTurbo,
@@ -20,6 +21,7 @@ t = TestRunner(
         Operation(OperationType.ADD, AddInfo(tag="2", value=numpy.array([1, 2]))),
         Operation(OperationType.ADD, AddInfo(tag="3", value=numpy.array([1, 3]))),
         Operation(OperationType.ADD, AddInfo(tag="4", value=numpy.array([1, 4]))),
+        Operation(OperationType.CALCULATE_MATCHES, CalculateMatchesInfo(value=numpy.array([2, 2]), fetch_matched_value=True)),
     ]
 )
 

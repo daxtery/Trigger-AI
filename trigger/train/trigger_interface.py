@@ -168,7 +168,17 @@ class TriggerInterface:
 
         elif operation.type == OperationType.CALCULATE_MATCHES:
             calculate_matches_info: CalculateMatchesInfo = operation.info
-            return self.get_matches_for([calculate_matches_info.transformer_key], [calculate_matches_info.value])
+            matches = self.get_matches_for([calculate_matches_info.transformer_key], [calculate_matches_info.value])[0]
+
+            if calculate_matches_info.fetch_matched_value:
+                matches_values = [
+                    self.instances_map[match.with_tag]
+                    for match in matches
+                ]
+                return matches_values, matches
+                    
+            else:
+                return matches
             
         elif operation.type == OperationType.EVALUATE_CLUSTERS:
             evaluate_clusters_info: EvaluateClustersInfo = operation.info
@@ -177,13 +187,13 @@ class TriggerInterface:
         elif operation.type == OperationType.EVALUATE_MATCHES:
 
             evaluate_matches_info: EvaluateMatchesInfo = operation.info
-            return eval_matches(self, evaluate_matches_info.values)
+            return eval_matches(self, evaluate_matches_info.values, evaluate_matches_info.fetch_matched_value)
             
         elif operation.type == OperationType.EVALUATE_CLUSTERS_AND_MATCHES:
             evaluate_clusters_and_matches_info: EvaluateClustersAndMatchesInfo = operation.info
 
             clusters_evaluation = eval_cluster(self)
-            matches_evaluation = eval_matches(self, evaluate_clusters_and_matches_info.values)
+            matches_evaluation = eval_matches(self, evaluate_clusters_and_matches_info.values, evaluate_clusters_and_matches_info.fetch_matched_value)
 
             results = clusters_evaluation
             results['matches_results'] = matches_evaluation
