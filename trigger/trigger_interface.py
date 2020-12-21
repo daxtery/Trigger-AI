@@ -1,11 +1,11 @@
-from trigger.train.scoring_calculator import ScoringCalculator
+from trigger.scoring import ScoringCalculator, Scoring
 from trigger.test.match import eval_matches
 from trigger.test.cluster import eval_cluster
-from trigger.train.operation import AddInfo, CalculateMatchesInfo, EvaluateClustersAndMatchesInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
-from trigger.train.scoring import Scoring
+from trigger.operations import AddInfo, CalculateMatchesInfo, EvaluateClustersAndMatchesInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
+from trigger.transformers.transformer_pipeline import Instance, TransformerPipeline
+from trigger.clusters.processor import Processor
+
 import numpy
-from trigger.train.transformers.transformer_pipeline import Instance, TransformerPipeline
-from trigger.train.cluster.processor import Processor
 
 from typing import Any, Dict, List, Optional
 
@@ -171,11 +171,11 @@ class TriggerInterface:
             matches = self.get_matches_for([calculate_matches_info.transformer_key], [calculate_matches_info.value])[0]
 
             if calculate_matches_info.fetch_matched_value:
-                matches_values = [
-                    self.instances_map[match.with_tag]
+                matches_and_values = [
+                    { "Scoring": match, "Instance" : self.instances_map[match.with_tag] }
                     for match in matches
                 ]
-                return matches_values, matches
+                return matches_and_values
                     
             else:
                 return matches

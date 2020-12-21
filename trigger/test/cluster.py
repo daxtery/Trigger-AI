@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from trigger.train.trigger_interface import TriggerInterface
+    from trigger.trigger_interface import TriggerInterface
 
 
 def compute_cluster_score(interface: "TriggerInterface") -> float:

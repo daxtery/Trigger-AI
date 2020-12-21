@@ -1,7 +1,8 @@
-from trigger.train.cluster.gturbo import GTurbo
-import numpy
-from trigger.train.operation import AddInfo, CalculateMatchesInfo, Operation, OperationType
+from trigger.clusters.gturbo import GTurbo
+from trigger.operations import AddInfo, CalculateMatchesInfo, Operation, OperationType
 from trigger.test.test_operations_runner import TestRunner
+
+import numpy
 
 param_grid = {
     "epsilon_b": [0.01],

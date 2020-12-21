@@ -1,11 +1,20 @@
-import inspect
-from inspect import signature
-from trigger.train.scoring import Scoring
+from trigger.transformers.transformer_pipeline import Instance
 from trigger.metrics.match import similarity_metric
 from typing import Any, Dict
-from trigger.train.scoring_options import ScoringOptions
-from trigger.train.transformers.transformer_pipeline import Instance
 
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Scoring:
+    with_tag: str
+    similarity_score: float
+    
+    is_match: bool
+
+@dataclass()
+class ScoringOptions:
+    score_to_be_match: float =.5
 
 class ScoringCalculator:
 

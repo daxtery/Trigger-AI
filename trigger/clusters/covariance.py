@@ -1,6 +1,6 @@
+from trigger.clusters.processor import Processor
 import numpy as np
-from trigger.train.cluster.processor import Processor
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from scipy.spatial.distance import mahalanobis
 
 class ClusterNode:

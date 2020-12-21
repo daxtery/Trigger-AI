@@ -1,10 +1,11 @@
 from pathlib import Path
-from trigger.train.scoring_calculator import ScoringCalculator
+from trigger.transformers.transformer_pipeline import TransformerPipeline
+from trigger.clusters.processor import Processor
+from trigger.scoring import ScoringCalculator
 from trigger.util.json_encoder import EnhancedJSONEncoder
-from trigger.train.operation import Operation
+from trigger.operations import Operation
 
-from trigger.train.transformers.transformer_pipeline import TransformerPipeline
-from trigger.train.trigger_interface import TriggerInterface
+from trigger.trigger_interface import TriggerInterface
 from typing import Any, Dict, List, Type
 
 import logging
@@ -12,8 +13,6 @@ import logging
 import json
 import itertools
 import os
-
-from trigger.train.cluster.processor import Processor
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_runner')

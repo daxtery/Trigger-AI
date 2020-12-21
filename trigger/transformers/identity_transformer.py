@@ -1,5 +1,5 @@
+from trigger.transformers.transformer_pipeline import Instance, TransformerPipeline
 import numpy
-from trigger.train.transformers.transformer_pipeline import Instance, TransformerPipeline
 
 class IdentityPipeline(TransformerPipeline[numpy.ndarray]):
 

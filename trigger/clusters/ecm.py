@@ -1,8 +1,8 @@
+from trigger.clusters.processor import Processor
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy
 
-from trigger.train.cluster.processor import Processor
 from scipy.spatial.distance import cdist
 
 import numpy as np

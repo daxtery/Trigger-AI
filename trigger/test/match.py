@@ -1,12 +1,12 @@
 from collections import Counter
 import statistics
 from trigger.util.statistics import average_from_distribution, max_from_distribution, min_from_distribution, to_range
-from trigger.train.operation import CalculateMatchesInfo
+from trigger.operations import CalculateMatchesInfo
 from typing import Any, List
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from trigger.train.trigger_interface import TriggerInterface
+    from trigger.trigger_interface import TriggerInterface
 
 
 def eval_matches(interface: "TriggerInterface",

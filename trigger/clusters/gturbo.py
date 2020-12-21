@@ -7,7 +7,7 @@ import faiss
 
 from scipy.spatial.distance import cdist
 
-from trigger.train.cluster.processor import Processor
+from trigger.clusters.processor import Processor
 
 import numpy as np
 
