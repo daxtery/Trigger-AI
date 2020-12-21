@@ -1,18 +1,6 @@
 **__pycache__/
 
-.idea/
-
 .vscode/
 
-venv/
+.venv/
 results_*.json
-tf_policy/eval
-tf_policy/checkpoints
-tf_policy/train
-tf_policy/policies
-
-venv_w/
-
-server/config.json
-
-pythonenv3.8/
