@@ -7,6 +7,10 @@ import numpy
 class Processor(ABC):
 
     @abstractmethod
+    def __init__(self, **kwargs) -> None:
+        pass
+
+    @abstractmethod
     def process(self, tag: str, instance: numpy.ndarray, custom_data: Any = None) -> None:
         pass
 

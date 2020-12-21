@@ -1,9 +1,0 @@
-Sector: Navy
-Area: Military
-Hardskills: Math, Mechanical Engineering
-Softskills: Individuality, Leadership
-
-Sector: Tourism
-Area: Tourism
-Hardskills:
-Softskills: Negotiation, Charismatic
