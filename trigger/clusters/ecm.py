@@ -167,7 +167,7 @@ class ECM(Processor):
 
 
     def _search_index_and_distance(self, instance: Any) -> \
-            Tuple[SearchResultType, Tuple[Optional[int], Optional[int]]]:
+            Tuple[SearchResultType, Tuple[int, int]]:
 
         self._ensure_cached()
 
@@ -215,12 +215,8 @@ class ECM(Processor):
     def safe_file_name(self) -> str:
         return f"ECM = distance_threshold={self.distance_threshold}"
 
-    def predict(self, instance: Any) -> Optional[int]:
-        # FIXME: What should predict do in this case?
-        if len(self.clusters) == 0:
-            return None
-
-        search_result, (index, distance) = self._search_index_and_distance(instance)
+    def predict(self, instance: Any) -> int:
+        search_result, (index, _) = self._search_index_and_distance(instance)
 
         # FIXME: What should predict do in this case?
         if search_result == SearchResultType.OUTSIDE:
@@ -229,5 +225,6 @@ class ECM(Processor):
         elif search_result == SearchResultType.THRESHOLD:
             return index
 
-        elif search_result == SearchResultType.RADIUS:
+        #elif search_result == SearchResultType.RADIUS:
+        else:
             return index
