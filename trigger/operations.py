@@ -1,4 +1,4 @@
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, TypeVar
 
 from dataclasses import dataclass
 from enum import Enum, unique

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Dict
 from typing_extensions import Protocol
 
 import numpy
