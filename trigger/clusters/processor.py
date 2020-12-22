@@ -1,47 +1,34 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Dict
+from typing_extensions import Protocol
 
 import numpy
 
-
-class Processor(ABC):
-
-    @abstractmethod
-    def __init__(self, **kwargs) -> None:
-        pass
+class Processor(Protocol):
 
     @abstractmethod
-    def process(self, tag: str, instance: numpy.ndarray) -> None:
-        pass
+    def process(self, tag: str, instance: numpy.ndarray) -> None:...
 
     @abstractmethod
-    def update(self, tag: str, instance: numpy.ndarray) -> None:
-        pass
+    def update(self, tag: str, instance: numpy.ndarray) -> None:...
 
     @abstractmethod
-    def remove(self, tag: str) -> None:
-        pass
+    def remove(self, tag: str) -> None:...
 
     @abstractmethod
-    def get_cluster_by_tag(self, tag: str) -> Optional[int]:
-        pass
+    def get_cluster_by_tag(self, tag: str) -> Optional[int]:...
 
     @abstractmethod
-    def get_tags_in_cluster(self, cluster_id: int) -> List[str]:
-        pass
+    def get_tags_in_cluster(self, cluster_id: int) -> List[str]:...
 
     @abstractmethod
-    def get_cluster_ids(self) -> List[int]:
-        pass
+    def get_cluster_ids(self) -> List[int]:...
 
     @abstractmethod
-    def predict(self, instance: numpy.ndarray) -> int:
-        pass
+    def predict(self, instance: numpy.ndarray) -> int:...
 
     @abstractmethod
-    def describe(self) -> Dict[str, Any]:
-        pass
+    def describe(self) -> Dict[str, Any]:...
 
     @abstractmethod
-    def safe_file_name(self) -> str:
-        pass
+    def safe_file_name(self) -> str:...
