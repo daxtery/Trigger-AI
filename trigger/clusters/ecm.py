@@ -23,7 +23,7 @@ class Cluster:
     def _adapt(self, distance: float, instance: numpy.ndarray):
         direction = instance - self.center
         self.radius = distance / 2
-        self.center = instance - (direction / np.linalg.norm(direction)) * self.radius
+        self.center : numpy.ndarray = instance - (direction / np.linalg.norm(direction)) * self.radius
 
     def add_threshold(self, distance: float, tag: str, instance: numpy.ndarray) -> None:
         self.add_radius(tag, instance)
@@ -55,7 +55,7 @@ class ECM(Processor):
         self.cluster_index = 0
 
         self.cached_cluster_keys: List[int] = []
-        self.cached_cluster_centers: List[float] = []
+        self.cached_cluster_centers: List[numpy.ndarray] = []
         self.cached_cluster_radiuses: List[float] = []
 
     def update(self, tag: str, instance: numpy.ndarray) -> None:
@@ -167,7 +167,7 @@ class ECM(Processor):
 
 
     def _search_index_and_distance(self, instance: Any) -> \
-            Tuple[SearchResultType, Tuple[int, int]]:
+            Tuple[SearchResultType, Tuple[int, float]]:
 
         self._ensure_cached()
 
@@ -183,14 +183,14 @@ class ECM(Processor):
 
         possible = distances[possible_indexes]
 
-        min_index = None if possible.size == 0 else possible_indexes[possible.argmin()]
+        min_index: Optional[int] = None if possible.size == 0 else possible_indexes[possible.argmin()]
 
         if min_index is not None:
             return SearchResultType.RADIUS, (self.cached_cluster_keys[min_index], distances[min_index])
 
-        distances_plus_radiuses = np.add(distances, self.cached_cluster_radiuses)
+        distances_plus_radiuses = distances + self.cached_cluster_radiuses
         lowest_distance_and_radius_index = np.argmin(distances_plus_radiuses)
-        lowest_distance_and_radius = distances_plus_radiuses[lowest_distance_and_radius_index]
+        lowest_distance_and_radius: float = distances_plus_radiuses[lowest_distance_and_radius_index]
 
         actual_index = self.cached_cluster_keys[lowest_distance_and_radius_index]
 
