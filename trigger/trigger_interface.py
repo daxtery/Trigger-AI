@@ -43,36 +43,32 @@ class TriggerInterface:
         transformer = self.find_transformer_for_key(transformer_key)
 
         if transformer is None:
+            # TODO: LOG THIS
             return None
 
         return transformer.transform(value)
 
-    def create_instances_filter_none(self, transformer_keys: List[Optional[str]], values: List[Any]) -> List[Instance]:
-        instances = [
-            self.create_instance_or_none(transformer_key, value)
-            for transformer_key, value in zip(transformer_keys, values)
-        ]
-
-        return list(filter(None, instances)) 
-
-    def add(self, tags: List[str], transformer_keys: List[Optional[str]], values: List[Any]) -> None:
-        instances = self.create_instances_filter_none(transformer_keys, values)
+    def add(self, tag: str, transformer_key: Optional[str], value: Any) -> bool:
+        instance = self.create_instance_or_none(transformer_key, value)
         
-        for tag, instance in zip(tags, instances):
-            self.add_instance(tag, instance)
+        if instance is None:
+            return False
+
+        self.add_instance(tag, instance)
+        return True
+
 
     def add_instance(self, tag: str, instance: Instance) -> None:
         self.processor.process(tag, instance.embedding)
         self.instances_map[tag] = instance
 
-    def update(self, tags: List[str], transformer_keys: List[Optional[str]], values: List[Any]) -> bool:
-        instances = self.create_instances_filter_none(transformer_keys, values)
-        
-        for tag, instance in zip(tags, instances):
-            if not self.update_instance(tag, instance):
-                return False
+    def update(self, tag: str, transformer_key: Optional[str], value: Any) -> bool:
+        instance = self.create_instance_or_none(transformer_key, value)
 
-        return True
+        if instance is None:
+            return False
+        
+        return self.update_instance(tag, instance)
 
     def update_instance(self, tag: str, instance: Instance) -> bool:
         if not tag in self.instances_map:
@@ -83,19 +79,21 @@ class TriggerInterface:
 
         return True
 
-    def remove(self, tags: List[str]) -> None:
-        for tag in tags:
-            self.processor.remove(tag)
-            del self.instances_map[tag]
+    def remove(self, tag: str) -> bool:
+        if not tag in self.instances_map:
+            return False
 
-    def get_scorings_for(self, transformer_keys: List[Optional[str]], values: List[Any]) -> List[List[Scoring]]:
-        instances = self.create_instances_filter_none(transformer_keys, values)
-        
-        return [
-            self.get_scorings_for_instance(instance)
-            for instance in instances
-        ]
-            
+        self.processor.remove(tag)
+        del self.instances_map[tag]
+        return True
+
+    def get_scorings_for(self, transformer_key: Optional[str], value: Any) -> Optional[List[Scoring]]:
+        instance = self.create_instance_or_none(transformer_key, value)
+
+        if instance is None:
+            return None
+
+        return self.get_scorings_for_instance(instance)
 
     def get_scorings_for_instance(self, instance: Instance) -> List[Scoring]:
         
@@ -114,13 +112,13 @@ class TriggerInterface:
         return list(filter(None, temp))
 
     
-    def get_matches_for(self, transformer_keys: List[Optional[str]], values: List[Any]) -> List[List[Scoring]]:
-        instances = self.create_instances_filter_none(transformer_keys, values)
+    def get_matches_for(self, transformer_key: Optional[str], value: Any) -> Optional[List[Scoring]]:
+        instance = self.create_instance_or_none(transformer_key, value)
 
-        return [
-            self.get_matches_for_instance(instance)
-            for instance in instances
-        ]
+        if instance is None:
+            return None
+
+        return self.get_matches_for_instance(instance)
     
     def get_matches_for_instance(self, instance: Instance) -> List[Scoring]:
 
@@ -132,20 +130,19 @@ class TriggerInterface:
             if scoring.is_match
         ]
 
-    def calculate_scorings_between_values_and_tags(self, transformer_keys: List[Optional[str]], values: List[Any], tags: List[str]) -> List[Scoring]:
-        instances = self.create_instances_filter_none(transformer_keys, values)
+    def calculate_scoring_between_value_and_tag(self, transformer_key: Optional[str], value: Any, tag: str) -> Optional[Scoring]:
+        instance = self.create_instance_or_none(transformer_key, value)
 
-        temp = [
-            self.calculate_scoring_between_instance_and_tag_or_none(instance, tag)
-            for tag, instance in zip(tags, instances)
-        ]
+        if instance is None:
+            return None
 
-        return list(filter(None, temp))
+        return self.calculate_scoring_between_instance_and_tag_or_none(instance, tag)
 
     def calculate_scoring_between_instance_and_tag_or_none(self, instance: Instance, tag: str) -> Optional[Scoring]:
         instances = self.get_instances_by_tag([tag])
 
         if len(instances) == 0:
+            # TODO: LOG THIS
             return None
 
         instance2 = instances[0]
@@ -167,26 +164,26 @@ class TriggerInterface:
     def on_operation(self, operation: Operation):
         if operation.type == OperationType.ADD:
             add_info: AddInfo = operation.info
-            self.add([add_info.tag], [add_info.transformer_key], [add_info.value])
+            self.add(add_info.tag, add_info.transformer_key, add_info.value)
 
         elif operation.type == OperationType.REMOVE:
             remove_info: RemoveInfo = operation.info
-            self.remove([remove_info.tag])
+            self.remove(remove_info.tag)
 
         elif operation.type == OperationType.UPDATE:
             update_info: UpdateInfo = operation.info
-            self.update([update_info.tag], [update_info.transformer_key], [update_info.value])
+            self.update(update_info.tag, update_info.transformer_key, update_info.value)
 
         elif operation.type == OperationType.CALCULATE_SCORES:
             calculate_scoring_info: CalculateScoringInfo = operation.info
             return self.get_scorings_for(
-                [calculate_scoring_info.transformer_key],
-                [calculate_scoring_info.value],
-            )[0]
+                calculate_scoring_info.transformer_key,
+                calculate_scoring_info.value,
+            )
 
         elif operation.type == OperationType.CALCULATE_MATCHES:
             calculate_matches_info: CalculateMatchesInfo = operation.info
-            return self.get_matches_for([calculate_matches_info.transformer_key], [calculate_matches_info.value])[0]
+            return self.get_matches_for(calculate_matches_info.transformer_key, calculate_matches_info.value)
             
         elif operation.type == OperationType.EVALUATE_CLUSTERS:
             evaluate_clusters_info: EvaluateClustersInfo = operation.info

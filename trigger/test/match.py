@@ -25,9 +25,12 @@ def eval_matches(interface: "TriggerInterface",
     for value_to_match in values_to_match:
 
         scorings = interface.get_scorings_for(
-            [value_to_match.transformer_key],
-            [value_to_match.value]
-        )[0]
+            value_to_match.transformer_key,
+            value_to_match.value
+        )
+
+        if scorings is None:
+            continue
 
         scoring_scores = [
             scoring.similarity_score
