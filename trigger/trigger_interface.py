@@ -91,6 +91,9 @@ class TriggerInterface:
 
     def get_scorings_for_instance(self, instance: Instance) -> List[Scoring]:
         
+        if len(self.instances_map) == 0:
+            return []
+
         would_be_cluster_id = self.processor.predict(instance.embedding)
 
         tags = self.processor.get_tags_in_cluster(would_be_cluster_id)
