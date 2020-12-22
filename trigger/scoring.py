@@ -7,7 +7,7 @@ from dataclasses import dataclass
 T = TypeVar('T')
 
 
-@dataclass(frozen=True)
+@dataclass()
 class Scoring(Generic[T]):
     scored_tag: str
     scored_instance: Instance[T]
