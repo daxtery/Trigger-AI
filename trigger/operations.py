@@ -10,9 +10,10 @@ class OperationType(Enum):
     UPDATE = 1
     REMOVE = 2
     CALCULATE_MATCHES = 3
-    EVALUATE_CLUSTERS = 4
-    EVALUATE_MATCHES = 5
-    EVALUATE_CLUSTERS_AND_MATCHES = 6
+    CALCULATE_SCORES = 4
+    EVALUATE_CLUSTERS = 5
+    EVALUATE_MATCHES = 6
+    EVALUATE_CLUSTERS_AND_MATCHES = 7
 
 
 T = TypeVar('T')
@@ -36,10 +37,14 @@ class RemoveInfo():
 
 
 @dataclass()
-class CalculateMatchesInfo(Generic[T]):
+class CalculateScoringInfo(Generic[T]):
     value: T
     transformer_key: Optional[str] = None
-    fetch_matched_value: bool = False
+
+
+@dataclass()
+class CalculateMatchesInfo(CalculateScoringInfo):
+    pass
 
 
 @dataclass()
@@ -50,7 +55,7 @@ class EvaluateClustersInfo():
 @dataclass()
 class EvaluateMatchesInfo():
     values: List[CalculateMatchesInfo]
-    fetch_matched_value: bool = False
+    fetch_instance: bool = False
 
 
 @dataclass()
@@ -61,6 +66,7 @@ class EvaluateClustersAndMatchesInfo(EvaluateClustersInfo, EvaluateMatchesInfo):
 OT = TypeVar('OT',
              AddInfo,
              RemoveInfo,
+             CalculateScoringInfo,
              CalculateMatchesInfo,
              EvaluateClustersInfo,
              EvaluateMatchesInfo,
