@@ -119,8 +119,8 @@ class ECM(Processor):
         self._remove_from_cluster(cluster, tag)
         self._invalidate_cached()
 
-    def get_cluster_by_tag(self, tag: str) -> Optional[int]:
-        return self.tag_to_cluster.get(tag, None)
+    def get_cluster_by_tag(self, tag: str) -> int:
+        return self.tag_to_cluster[tag]
 
     def get_tags_in_cluster(self, cluster_id: int) -> List[str]:
         return self.clusters[cluster_id].tags

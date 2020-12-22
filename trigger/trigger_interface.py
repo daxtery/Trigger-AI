@@ -65,15 +65,23 @@ class TriggerInterface:
         self.processor.process(tag, instance.embedding)
         self.instances_map[tag] = instance
 
-    def update(self, tags: List[str], transformer_keys: List[Optional[str]], values: List[Any]) -> None:
+    def update(self, tags: List[str], transformer_keys: List[Optional[str]], values: List[Any]) -> bool:
         instances = self.create_instances_filter_none(transformer_keys, values)
         
         for tag, instance in zip(tags, instances):
-            self.update_instance(tag, instance)
+            if not self.update_instance(tag, instance):
+                return False
 
-    def update_instance(self, tag: str, instance: Instance) -> None:
+        return True
+
+    def update_instance(self, tag: str, instance: Instance) -> bool:
+        if not tag in self.instances_map:
+            return False
+        
         self.processor.update(tag, instance.embedding)
         self.instances_map[tag] = instance
+
+        return True
 
     def remove(self, tags: List[str]) -> None:
         for tag in tags:

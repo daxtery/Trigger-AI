@@ -115,7 +115,7 @@ class CovarianceCluster(Processor):
 
         self.remove_from_cluster(tag)
 
-    def get_cluster_by_tag(self, tag: str) -> Optional[int]:
+    def get_cluster_by_tag(self, tag: str) -> int:
 
         return self.tag_to_cluster[tag]
 

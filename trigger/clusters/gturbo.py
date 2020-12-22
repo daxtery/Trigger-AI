@@ -312,7 +312,7 @@ class GTurbo(Processor):
         node = self.graph.get_node(node_id)
         node.remove_instance(tag)
 
-    def get_cluster_by_tag(self, tag: str) -> Optional[int]:
+    def get_cluster_by_tag(self, tag: str) -> int:
 
         return self.point_to_cluster[tag]
 
