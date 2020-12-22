@@ -25,11 +25,7 @@ class AddInfo(Generic[T]):
     value: T
     transformer_key: Optional[str] = None
 
-
-@dataclass()
-class UpdateInfo(AddInfo):
-    pass
-
+UpdateInfo = AddInfo
 
 @dataclass()
 class RemoveInfo():
@@ -42,10 +38,7 @@ class CalculateScoringInfo(Generic[T]):
     transformer_key: Optional[str] = None
 
 
-@dataclass()
-class CalculateMatchesInfo(CalculateScoringInfo):
-    pass
-
+CalculateMatchesInfo = CalculateScoringInfo
 
 @dataclass()
 class EvaluateClustersInfo():
@@ -66,6 +59,7 @@ class EvaluateClustersAndMatchesInfo(EvaluateClustersInfo, EvaluateMatchesInfo):
 OT = TypeVar('OT',
              AddInfo,
              RemoveInfo,
+             UpdateInfo,
              CalculateScoringInfo,
              CalculateMatchesInfo,
              EvaluateClustersInfo,

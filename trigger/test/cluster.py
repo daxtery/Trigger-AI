@@ -49,7 +49,7 @@ def compute_cluster_score(interface: "TriggerInterface") -> float:
 
         node_delta = numpy.power(node_dispersion_delta, 2)
 
-        node_score = numpy.ex(-(node_delta)) * numpy.log(number_of_tags)
+        node_score = numpy.exp(-(node_delta)) * numpy.log(number_of_tags)
 
         node_scores.append(node_score)
 
@@ -85,6 +85,13 @@ def eval_cluster(interface: "TriggerInterface") -> Dict[str, Any]:
 
     counter = Counter(num_instances_per_cluster)
 
+    if len(counter) == 0:
+        min_instances = 0
+    elif len(counter) == 1:
+        min_instances = counter.most_common()[-1:][0][0]
+    else:
+        min_instances = counter.most_common()[-2:][0][0]
+
     return {
         'ss': float(Ss),
         'cluster_score': compute_cluster_score(interface),
@@ -93,5 +100,5 @@ def eval_cluster(interface: "TriggerInterface") -> Dict[str, Any]:
         'distribution': {score: count for score, count in counter.most_common()},
         'avg/mean instances / cluster': statistics.mean(num_instances_per_cluster),
         'max instances of any cluster': counter.most_common()[0:1][0][0] if len(counter) > 0 else 0,
-        'min instances of any cluster': counter.most_common()[-2:][0][0] if len(counter) > 1 else 0
+        'min instances of any cluster': min_instances
     }

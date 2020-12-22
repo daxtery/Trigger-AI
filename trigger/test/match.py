@@ -10,9 +10,7 @@ if TYPE_CHECKING:
 
 
 def eval_matches(interface: "TriggerInterface",
-                 values_to_match: List[CalculateMatchesInfo[Any]],
-                 fetch_matched_value: bool = False,
-                 ):
+                 values_to_match: List[CalculateMatchesInfo]):
 
     by_value = []
 
@@ -36,20 +34,12 @@ def eval_matches(interface: "TriggerInterface",
             for scoring in scorings
         ]
 
-        matches = filter(lambda scoring: scoring.is_match, scorings)
+        matches = list(filter(lambda scoring: scoring.is_match, scorings))
 
         match_scores = [
             match.similarity_score
             for match in matches
         ]
-
-        if fetch_matched_value:
-            save_matches = [
-                (match, interface.get_instances_by_tag([match.with_tag])[0])
-                for match in matches
-            ]
-        else:
-            save_matches = list(matches)
 
         these_results = {
             'value': value_to_match,
@@ -57,7 +47,7 @@ def eval_matches(interface: "TriggerInterface",
             '#potential': len(scorings),
             'avg similarities': statistics.mean(scoring_scores) if len(scorings) > 0 else 0,
             'avg matches': statistics.mean(match_scores) if len(match_scores) > 0 else 0,
-            'matches': save_matches
+            'matches': list(matches)
         }
 
         by_value.append(these_results)
@@ -96,12 +86,12 @@ def eval_matches(interface: "TriggerInterface",
         "distribution matches range": {range_: count for range_, count in matches_range_counter.most_common()},
         "% at least 1 match": 1 - (num_matches_counter.get(0, 0) / sum(num_matches_counter.values())),
         "avg #matches": average_from_distribution(matches_count_distribution),
-        "max #matches of a user": max_from_distribution(matches_count_distribution),
-        "min #matches of a user": min_from_distribution(matches_count_distribution),
+        "max #matches of a value": max_from_distribution(matches_count_distribution),
+        "min #matches of a value": min_from_distribution(matches_count_distribution),
         "avg #potential": average_from_distribution(potential_count_distribution),
-        "max #potential of a user": max_from_distribution(potential_count_distribution),
-        "min #potential of a user": min_from_distribution(potential_count_distribution),
-        "avg matches score": statistics.mean([user["avg matches"] for user in by_value]),
-        "avg similarity score": statistics.mean([user["avg similarities"] for user in by_value]),
-        "by_user": by_value
+        "max #potential of a value": max_from_distribution(potential_count_distribution),
+        "min #potential of a value": min_from_distribution(potential_count_distribution),
+        "avg matches score": statistics.mean([value["avg matches"] for value in by_value]),
+        "avg similarity score": statistics.mean([value["avg similarities"] for value in by_value]),
+        "by_value": by_value
     }
