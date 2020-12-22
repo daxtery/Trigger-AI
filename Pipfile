@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "*"
+sklearn = "*"
+faiss-cpu = "*"
+typing-extensions = "*"
+
+[dev-packages]
+pipenv-setup = "*"
+
+[requires]
+python_version = "3.7"
