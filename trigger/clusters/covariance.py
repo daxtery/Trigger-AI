@@ -1,6 +1,6 @@
 from trigger.clusters.processor import Processor
 import numpy as np
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Tuple
 from scipy.spatial.distance import mahalanobis
 
 class ClusterNode:
@@ -68,11 +68,11 @@ class CovarianceCluster(Processor):
         
         pass
 
-    def stat_distance(self, instance, node: ClusterNode):
+    def stat_distance(self, instance, node: ClusterNode) -> float:
 
         return mahalanobis(instance, node.mean, node.cov_matrix)
 
-    def brute_search(self, instance) -> ClusterNode:
+    def brute_search(self, instance) -> Tuple[float, ClusterNode]:
 
         nodes = list(self.clusters.values())
 
