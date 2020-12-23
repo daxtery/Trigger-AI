@@ -8,6 +8,7 @@ numpy = "*"
 sklearn = "*"
 faiss-cpu = "*"
 typing-extensions = "*"
+scipy = "*"
 
 [dev-packages]
 pipenv-setup = "*"

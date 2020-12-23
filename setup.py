@@ -136,7 +136,7 @@ setup(
         "joblib==1.0.0; python_version >= '3.6'",
         "numpy==1.19.4",
         "scikit-learn==0.24.0; python_version >= '3.6'",
-        "scipy==1.5.4; python_version >= '3.6'",
+        "scipy==1.5.4",
         "sklearn==0.0",
         "threadpoolctl==2.1.0; python_version >= '3.5'",
         "typing-extensions==3.7.4.3",
