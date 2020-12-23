@@ -213,6 +213,6 @@ class TriggerInterface:
 
     def describe(self) -> Dict[str, Any]:
         return {
-            "transformers": self.transformers,
-            "scoring_calculator": self.scoring_calculator
+            "transformers": { key: transformer.__class__.__name__  for key, transformer in self.transformers.items() },
+            "scoring_calculator": self.scoring_calculator.describe()
         }
