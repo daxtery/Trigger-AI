@@ -10,7 +10,6 @@ T = TypeVar('T')
 @dataclass()
 class Scoring(Generic[T]):
     scored_tag: str
-    scored_instance: Instance[T]
     similarity_score: float
 
     is_match: bool
@@ -28,7 +27,7 @@ class ScoringCalculator:
 
     def __call__(self, instance1: Instance, tag: str, instance2: Instance) -> Scoring:
         similarity_score = similarity_metric(instance1.embedding, instance2.embedding)
-        return Scoring(tag, instance2, similarity_score, similarity_score >= self.scoring_options.score_to_be_match)
+        return Scoring(tag, similarity_score, similarity_score >= self.scoring_options.score_to_be_match)
 
     def describe(self) -> Dict[str, Any]:
         return {
