@@ -1,18 +1,17 @@
 from collections import Counter
 import statistics
+from trigger.scoring import Scoring
+from trigger.transformers.transformer_pipeline import Instance
 from trigger.util.statistics import average_from_distribution, max_from_distribution, min_from_distribution, to_range
-from trigger.operations import CalculateMatchesInfo
-from typing import Any, List
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from trigger.trigger_interface import TriggerInterface
+from typing import List
 
 
-def eval_matches(interface: "TriggerInterface",
-                 values_to_match: List[CalculateMatchesInfo]):
+def eval_matches(
+        instances_to_match: List[Instance],
+        individual_scorings: List[List[Scoring]]
+        ):
 
-    by_value = []
+    by_instance = []
 
     num_matches_counter = Counter()
     num_potential_counter = Counter()
@@ -22,15 +21,7 @@ def eval_matches(interface: "TriggerInterface",
     avg_similarity_range_counter = Counter()
     avg_matches_range_counter = Counter()
 
-    for value_to_match in values_to_match:
-
-        scorings = interface.get_scorings_for(
-            value_to_match.transformer_key,
-            value_to_match.value
-        )
-
-        if scorings is None:
-            continue
+    for instance, scorings in zip(instances_to_match, individual_scorings):
 
         scoring_scores = [
             scoring.similarity_score
@@ -45,15 +36,15 @@ def eval_matches(interface: "TriggerInterface",
         ]
 
         these_results = {
-            'value': value_to_match,
+            'value': instance.value,
             '#matches': len(match_scores),
-            '#potential': len(scorings),
-            'avg similarities': statistics.mean(scoring_scores) if len(scorings) > 0 else 0,
+            '#potential': len(individual_scorings),
+            'avg similarities': statistics.mean(scoring_scores) if len(individual_scorings) > 0 else 0,
             'avg matches': statistics.mean(match_scores) if len(match_scores) > 0 else 0,
             'matches': list(matches)
         }
 
-        by_value.append(these_results)
+        by_instance.append(these_results)
 
         num_matches_counter.update([these_results['#matches']])
         num_potential_counter.update([these_results['#potential']])
@@ -94,7 +85,7 @@ def eval_matches(interface: "TriggerInterface",
         "avg #potential": average_from_distribution(potential_count_distribution),
         "max #potential of a value": max_from_distribution(potential_count_distribution),
         "min #potential of a value": min_from_distribution(potential_count_distribution),
-        "avg matches score": statistics.mean([value["avg matches"] for value in by_value]),
-        "avg similarity score": statistics.mean([value["avg similarities"] for value in by_value]),
-        "by_value": by_value
+        "avg matches score": statistics.mean([value["avg matches"] for value in by_instance]),
+        "avg similarity score": statistics.mean([value["avg similarities"] for value in by_instance]),
+        "by_value": by_instance
     }

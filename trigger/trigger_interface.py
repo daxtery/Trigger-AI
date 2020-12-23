@@ -5,9 +5,7 @@ from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringIn
 from trigger.transformers.transformer_pipeline import Instance, TransformerPipeline
 from trigger.clusters.processor import Processor
 
-import numpy
-
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -156,55 +154,99 @@ class TriggerInterface:
 
         return list(filter(None, temp))
 
+    def on_operation_add(self, operation: Operation):
+        add_info: AddInfo = operation.info
+        return self.add(add_info.tag, add_info.transformer_key, add_info.value)
+
+    def on_operation_update(self, operation: Operation):
+        remove_info: RemoveInfo = operation.info
+        return self.remove(remove_info.tag)
+
+    def on_operation_remove(self, operation: Operation):
+        update_info: UpdateInfo = operation.info
+        return self.update(update_info.tag, update_info.transformer_key, update_info.value)
+    
+    def on_operation_calculate_scores(self, operation: Operation):
+        calculate_scoring_info: CalculateScoringInfo = operation.info
+        return self.get_scorings_for(
+            calculate_scoring_info.transformer_key,
+            calculate_scoring_info.value,
+        )
+    
+    def on_operation_calculate_matches(self, operation: Operation):
+        calculate_matches_info: CalculateMatchesInfo = operation.info
+        return self.get_matches_for(calculate_matches_info.transformer_key, calculate_matches_info.value)
+
+    def _calculate_operation_matches_inner(self, values: List[CalculateMatchesInfo]) -> \
+            Tuple[List[Instance], List[List[Scoring]]]:
+
+        all_instances: List[Instance] = []
+        all_scorings: List[List[Scoring]] = []
+
+        for value_to_match in values:
+            instance = self.create_instance_or_none(value_to_match.transformer_key, value_to_match.value)
+            if instance is None:
+                continue
+        
+            all_instances.append(instance)
+
+            scorings = self.get_scorings_for_instance(instance)
+
+            all_scorings.append(scorings)
+        
+        return all_instances, all_scorings
+    
+    def on_operation_evaluate_matches(self, operation: Operation):
+        evaluate_matches_info: EvaluateMatchesInfo = operation.info
+
+        instances, scorings = self._calculate_operation_matches_inner(evaluate_matches_info.values)
+
+        evaluation = eval_matches(instances, scorings)
+
+        if not evaluate_matches_info.fetch_instance:
+            del evaluation["by_value"]
+
+        return evaluation
+
+    def on_operation_evaluate_clusters_and_matches(self, operation: Operation):
+        evaluate_clusters_and_matches_info: EvaluateClustersAndMatchesInfo = operation.info
+        clusters_evaluation = eval_cluster(self)
+
+        instances, scorings = self._calculate_operation_matches_inner(evaluate_clusters_and_matches_info.values)
+
+        matches_evaluation = eval_matches(instances, scorings)
+
+        if not evaluate_clusters_and_matches_info.fetch_instance:
+            del matches_evaluation["by_value"]
+
+        results = clusters_evaluation
+        results['matches_results'] = matches_evaluation
+
+        return results
+    
+    def on_operation_evaluate_clusters(self, operation: Operation):
+        evaluate_clusters_info: EvaluateClustersInfo = operation.info
+        return eval_cluster(self)
+
     def on_operation(self, operation: Operation):
-        if operation.type == OperationType.ADD:
-            add_info: AddInfo = operation.info
-            self.add(add_info.tag, add_info.transformer_key, add_info.value)
+        
+        if operation.type == OperationType.ADD: 
+            return self.on_operation_add(operation)
+        if operation.type == OperationType.REMOVE:
+            return self.on_operation_remove(operation)
+        if operation.type == OperationType.UPDATE:
+            return self.on_operation_update(operation)
+        if operation.type == OperationType.CALCULATE_SCORES:
+            return self.on_operation_calculate_scores(operation)
+        if operation.type == OperationType.CALCULATE_MATCHES:
+            return self.on_operation_calculate_matches(operation)
+        if operation.type == OperationType.EVALUATE_CLUSTERS:
+            return self.on_operation_evaluate_clusters(operation)
+        if operation.type == OperationType.EVALUATE_MATCHES:
+            return self.on_operation_evaluate_matches(operation)
+        if operation.type == OperationType.EVALUATE_CLUSTERS_AND_MATCHES:
+            return self.on_operation_evaluate_clusters_and_matches(operation)
 
-        elif operation.type == OperationType.REMOVE:
-            remove_info: RemoveInfo = operation.info
-            self.remove(remove_info.tag)
-
-        elif operation.type == OperationType.UPDATE:
-            update_info: UpdateInfo = operation.info
-            self.update(update_info.tag, update_info.transformer_key, update_info.value)
-
-        elif operation.type == OperationType.CALCULATE_SCORES:
-            calculate_scoring_info: CalculateScoringInfo = operation.info
-            return self.get_scorings_for(
-                calculate_scoring_info.transformer_key,
-                calculate_scoring_info.value,
-            )
-
-        elif operation.type == OperationType.CALCULATE_MATCHES:
-            calculate_matches_info: CalculateMatchesInfo = operation.info
-            return self.get_matches_for(calculate_matches_info.transformer_key, calculate_matches_info.value)
-            
-        elif operation.type == OperationType.EVALUATE_CLUSTERS:
-            evaluate_clusters_info: EvaluateClustersInfo = operation.info
-            return eval_cluster(self)
-            
-        elif operation.type == OperationType.EVALUATE_MATCHES:
-
-            evaluate_matches_info: EvaluateMatchesInfo = operation.info
-            matches = eval_matches(self, evaluate_matches_info.values, )
-            if not evaluate_matches_info.fetch_instance:
-                del matches["by_value"]
-            return matches
-            
-        elif operation.type == OperationType.EVALUATE_CLUSTERS_AND_MATCHES:
-            evaluate_clusters_and_matches_info: EvaluateClustersAndMatchesInfo = operation.info
-
-            clusters_evaluation = eval_cluster(self)
-            matches_evaluation = eval_matches(self, evaluate_clusters_and_matches_info.values)
-
-            if not evaluate_clusters_and_matches_info.fetch_instance:
-                del matches_evaluation["by_value"]
-
-            results = clusters_evaluation
-            results['matches_results'] = matches_evaluation
-
-            return results
 
     def describe(self) -> Dict[str, Any]:
         return {
