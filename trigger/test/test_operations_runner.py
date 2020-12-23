@@ -1,9 +1,9 @@
 from pathlib import Path
-from trigger.transformers.transformer_pipeline import TransformerPipeline
+from trigger.transformers.transformer_pipeline import IdentityPipeline, NumpyToInstancePipeline, TransformerPipeline
 from trigger.clusters.processor import Processor
 from trigger.scoring import ScoringCalculator
 from trigger.util.json_encoder import EnhancedJSONEncoder
-from trigger.operations import Operation
+from trigger.operations import Operation, OperationType
 
 from trigger.trigger_interface import TriggerInterface
 from typing import Any, Dict, List, Type
@@ -96,13 +96,22 @@ class TestRunner:
 
         for operation in self.operations:
             result = interface.on_operation(operation)
-
-            if result:
-                results.append({ "Operation": operation, "Result": result })
-            elif not self.only_output_evaluates:
-                results.append(operation)
-
+            if result is None:
+                continue
+            treated_result = self.after_operation_treat_result(interface, operation, result)
+            if treated_result:
+                results.append(treated_result)
         return results
+
+    def after_operation_treat_result(self, interface: TriggerInterface, operation: Operation, result):
+
+        if self.only_output_evaluates:
+            if operation.type in [OperationType.EVALUATE_CLUSTERS, OperationType.EVALUATE_MATCHES, OperationType.EVALUATE_CLUSTERS_AND_MATCHES]:
+                return { "Operation": operation, "Result": result }
+            else:
+                return None
+
+        return { "Operation": operation, "Result": result }
 
 
     def _get_file_path(self, processor: Processor, output_type: str):
