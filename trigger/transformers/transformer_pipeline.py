@@ -27,6 +27,6 @@ class NumpyToInstancePipeline(TransformerPipeline[numpy.ndarray]):
 class IdentityPipeline(TransformerPipeline[T]):
 
     def transform(self, instance: Instance[T]) -> Instance[T]:
-        assert instance.embedding
-        assert instance.value
+        assert hasattr(instance, 'value')
+        assert hasattr(instance, 'embedding')
         return instance
