@@ -20,13 +20,13 @@ class TransformerPipeline(Protocol, Generic[T]):
 
 class NumpyToInstancePipeline(TransformerPipeline[numpy.ndarray]):
 
-    def transform(self, value: numpy.ndarray) -> Instance[numpy.ndarray]:
-        assert isinstance(value, numpy.ndarray)
-        return Instance(value, value)
+    def transform(self, numpy_array: numpy.ndarray) -> Instance[numpy.ndarray]:
+        assert isinstance(numpy_array, numpy.ndarray)
+        return Instance(numpy_array, numpy_array)
     
 class IdentityPipeline(TransformerPipeline[T]):
 
-    def transform(self, value: Instance[T]) -> Instance[T]:
-        assert value.embedding
-        assert value.value
-        return value
+    def transform(self, instance: Instance[T]) -> Instance[T]:
+        assert instance.embedding
+        assert instance.value
+        return instance
