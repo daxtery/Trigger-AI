@@ -204,7 +204,7 @@ class TriggerInterface:
         evaluation = eval_matches(instances, scorings)
 
         if not evaluate_matches_info.fetch_instance:
-            del evaluation["by_value"]
+            del evaluation["by_instance"]
 
         return evaluation
 
