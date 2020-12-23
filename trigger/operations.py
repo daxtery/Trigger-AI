@@ -1,6 +1,6 @@
 from typing import Generic, List, Optional, TypeVar
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, unique
 
 
@@ -48,7 +48,7 @@ class EvaluateClustersInfo():
 @dataclass()
 class EvaluateMatchesInfo():
     values: List[CalculateMatchesInfo]
-    fetch_instance: bool = False
+    fetch_instance: bool = field(repr=False)
 
 
 @dataclass()
