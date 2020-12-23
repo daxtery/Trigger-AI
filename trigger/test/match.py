@@ -87,5 +87,5 @@ def eval_matches(
         "min #potential of a value": min_from_distribution(potential_count_distribution),
         "avg matches score": statistics.mean([value["avg matches"] for value in by_instance]),
         "avg similarity score": statistics.mean([value["avg similarities"] for value in by_instance]),
-        "by_value": by_instance
+        "by_instance": by_instance
     }
