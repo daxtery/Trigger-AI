@@ -61,7 +61,7 @@ class TestRunner:
 
     def init_inferface(self, params) -> TriggerInterface:
         processor = self.processor_class(**params)
-        return TriggerInterface(processor, self.transformers)
+        return TriggerInterface(processor, self.transformers, self.scoring_calculator)
 
     def run_tests(self):
 
