@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Generic, TypeVar
 from typing_extensions import Protocol
 
@@ -10,7 +10,7 @@ T = TypeVar('T')
 @dataclass
 class Instance(Generic[T]):
     value: T
-    embedding: numpy.ndarray
+    embedding: numpy.ndarray = field(repr=False)
 
 class TransformerPipeline(Protocol, Generic[T]):
 
