@@ -1,0 +1,4 @@
+[submodule "Thruster"]
+	path = Thruster
+	url = https://github.com/SyNthw8ve/Thruster
+	branch = master
