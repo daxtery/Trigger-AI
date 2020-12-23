@@ -48,7 +48,7 @@ class EvaluateClustersInfo():
 @dataclass()
 class EvaluateMatchesInfo():
     values: List[CalculateMatchesInfo]
-    fetch_instance: bool = field(repr=False)
+    fetch_instance: bool = field(default=True, repr=False)
 
 
 @dataclass()
