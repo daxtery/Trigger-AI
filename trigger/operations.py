@@ -23,7 +23,7 @@ T = TypeVar('T')
 class AddInfo(Generic[T]):
     tag: str
     value: T
-    transformer_key: Optional[str] = None
+    transformer_key: str = "numpy"
 
 UpdateInfo = AddInfo
 
@@ -35,7 +35,7 @@ class RemoveInfo():
 @dataclass()
 class CalculateScoringInfo(Generic[T]):
     value: T
-    transformer_key: Optional[str] = None
+    transformer_key: str = "numpy"
 
 
 CalculateMatchesInfo = CalculateScoringInfo

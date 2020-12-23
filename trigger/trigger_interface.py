@@ -34,12 +34,7 @@ class TriggerInterface:
         
         return transformer
 
-    def create_instance_or_none(self, transformer_key: Optional[str], value: Any) -> Optional[Instance]:
-
-        if transformer_key is None:
-            assert isinstance(value, numpy.ndarray)
-            return Instance(value, value)
-
+    def create_instance_or_none(self, transformer_key: str, value: Any) -> Optional[Instance]:
         transformer = self.find_transformer_for_key(transformer_key)
 
         if transformer is None:
@@ -48,7 +43,7 @@ class TriggerInterface:
 
         return transformer.transform(value)
 
-    def add(self, tag: str, transformer_key: Optional[str], value: Any) -> bool:
+    def add(self, tag: str, transformer_key: str, value: Any) -> bool:
         instance = self.create_instance_or_none(transformer_key, value)
         
         if instance is None:
@@ -62,7 +57,7 @@ class TriggerInterface:
         self.processor.process(tag, instance.embedding)
         self.instances_map[tag] = instance
 
-    def update(self, tag: str, transformer_key: Optional[str], value: Any) -> bool:
+    def update(self, tag: str, transformer_key: str, value: Any) -> bool:
         instance = self.create_instance_or_none(transformer_key, value)
 
         if instance is None:
@@ -87,7 +82,7 @@ class TriggerInterface:
         del self.instances_map[tag]
         return True
 
-    def get_scorings_for(self, transformer_key: Optional[str], value: Any) -> Optional[List[Scoring]]:
+    def get_scorings_for(self, transformer_key: str, value: Any) -> Optional[List[Scoring]]:
         instance = self.create_instance_or_none(transformer_key, value)
 
         if instance is None:
@@ -112,7 +107,7 @@ class TriggerInterface:
         return list(filter(None, temp))
 
     
-    def get_matches_for(self, transformer_key: Optional[str], value: Any) -> Optional[List[Scoring]]:
+    def get_matches_for(self, transformer_key: str, value: Any) -> Optional[List[Scoring]]:
         instance = self.create_instance_or_none(transformer_key, value)
 
         if instance is None:
@@ -130,7 +125,7 @@ class TriggerInterface:
             if scoring.is_match
         ]
 
-    def calculate_scoring_between_value_and_tag(self, transformer_key: Optional[str], value: Any, tag: str) -> Optional[Scoring]:
+    def calculate_scoring_between_value_and_tag(self, transformer_key: str, value: Any, tag: str) -> Optional[Scoring]:
         instance = self.create_instance_or_none(transformer_key, value)
 
         if instance is None:

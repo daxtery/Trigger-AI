@@ -26,7 +26,10 @@ class TestRunner:
         processor_class: Type[Processor],
         param_grid: Dict[str, Any],
         operations: List[Operation],
-        transformers: Dict[str, TransformerPipeline] = {},
+        transformers: Dict[str, TransformerPipeline] = {
+            "numpy": NumpyToInstancePipeline(),
+            "identity": IdentityPipeline()
+        },
         scoring_calculator: ScoringCalculator = ScoringCalculator(),
         only_output_evaluates: bool = True,
         output_path: str = ".",
