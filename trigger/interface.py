@@ -9,10 +9,10 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('trigger_interface')
+logger = logging.getLogger('interface')
 logger.setLevel(logging.INFO)
 
-class TriggerInterface:
+class Interface:
     def __init__(
         self,
         processor: Processor,

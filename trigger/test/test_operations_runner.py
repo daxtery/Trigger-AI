@@ -5,7 +5,7 @@ from trigger.scoring import ScoringCalculator
 from trigger.util.json_encoder import EnhancedJSONEncoder
 from trigger.operations import Operation, OperationType
 
-from trigger.trigger_interface import TriggerInterface
+from trigger.interface import Interface
 from typing import Any, Dict, List, Type
 
 import logging
@@ -68,9 +68,9 @@ class TestRunner:
 
         return test_items
 
-    def init_inferface(self, params) -> TriggerInterface:
+    def init_inferface(self, params) -> Interface:
         processor = self.processor_class(**params)
-        return TriggerInterface(processor, self.transformers, self.scoring_calculator)
+        return Interface(processor, self.transformers, self.scoring_calculator)
 
     def run_tests(self):
 
@@ -96,7 +96,7 @@ class TestRunner:
 
                 self._save_results_csv(file_path, test, results)
 
-    def run_test(self, interface: TriggerInterface):
+    def run_test(self, interface: Interface):
 
         results = []
 
@@ -109,7 +109,7 @@ class TestRunner:
                 results.append(treated_result)
         return results
 
-    def after_operation_treat_result(self, interface: TriggerInterface, operation: Operation, result):
+    def after_operation_treat_result(self, interface: Interface, operation: Operation, result):
 
         if self.only_output_evaluates:
             if operation.type in [OperationType.EVALUATE_CLUSTERS, OperationType.EVALUATE_MATCHES]:
@@ -124,7 +124,7 @@ class TestRunner:
         file_name = processor.safe_file_name()
         return os.path.join(self.output_folder, F"{file_name}.{output_type}")
 
-    def _save_results_json(self, file_path: str, interface: TriggerInterface, result, json_cls: Type[json.JSONEncoder] = None):
+    def _save_results_json(self, file_path: str, interface: Interface, result, json_cls: Type[json.JSONEncoder] = None):
 
         test_descriptor = {
             'algorithm': interface.processor.describe(),

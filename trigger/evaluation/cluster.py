@@ -14,10 +14,10 @@ logger = logging.getLogger('cluster')
 logger.setLevel(logging.INFO)
 
 if TYPE_CHECKING:
-    from trigger.trigger_interface import TriggerInterface
+    from trigger.interface import Interface
 
 
-def compute_cluster_score(interface: "TriggerInterface") -> float:
+def compute_cluster_score(interface: "Interface") -> float:
     node_scores = []
 
     for cluster_id in interface.processor.get_cluster_ids():
@@ -56,7 +56,7 @@ def compute_cluster_score(interface: "TriggerInterface") -> float:
     return numpy.sum(node_scores)
 
 
-def eval_cluster(interface: "TriggerInterface") -> Dict[str, Any]:
+def eval_cluster(interface: "Interface") -> Dict[str, Any]:
 
     tags = interface.instances_map.keys()
     labels = []
