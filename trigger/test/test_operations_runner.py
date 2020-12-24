@@ -43,7 +43,7 @@ class TestRunner:
         self.only_output_evaluates = only_output_evaluates
         
         if use_last_folder_name_as_processor_class:
-            self.output_folder = output_base_folder + processor_class.__name__
+            self.output_folder = os.path.join(output_base_folder, processor_class.__name__)
         else:
             self.output_folder = output_base_folder
 
