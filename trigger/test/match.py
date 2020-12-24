@@ -2,8 +2,8 @@ from collections import Counter
 import statistics
 from trigger.scoring import Scoring
 from trigger.transformers.transformer_pipeline import Instance
-from trigger.util.statistics import Stats, average_from_distribution, extract_first_number_from_range, max_from_distribution, min_from_distribution, stats_from_counter, to_range
-from typing import Any, Dict, List, NewType, Tuple
+from trigger.util.statistics import Stats, stats_from_counter, to_range
+from typing import List
 
 
 def eval_matches(
@@ -21,9 +21,6 @@ def eval_matches(
 
     avg_matches_score_range_counter = Counter()
     avg_score_range_counter = Counter()
-
-    avg_matches_score_range_one_counter = Counter()
-    avg_score_range_one_counter = Counter()
 
     for instance, scorings in zip(instances_to_match, individual_scorings):
 
@@ -63,14 +60,9 @@ def eval_matches(
             avg_matches_range = to_range(these_results['average match score'], 5)
             avg_matches_score_range_counter += Counter([avg_matches_range])
             
-            avg_matches_int = extract_first_number_from_range(to_range(these_results['average match score'], 1))
-            avg_matches_score_range_one_counter += Counter([avg_matches_int])
-
         avg_score_range = to_range(these_results['average score'], 5)
         avg_score_range_counter += Counter([avg_score_range])
 
-        avg_score_int = extract_first_number_from_range(to_range(these_results['average score'], 1))
-        avg_score_range_one_counter += Counter([avg_score_int])
 
     json_obj = {}
 
@@ -88,7 +80,6 @@ def eval_matches(
     add_stats_to_json("#matches", stats_from_counter(num_matches_counter))
     add_stats_to_json("matches score range", stats_from_counter(matches_score_range_counter))
     add_stats_to_json("average matches score range", stats_from_counter(avg_matches_score_range_counter))
-    add_stats_to_json("average matches score", stats_from_counter(avg_matches_score_range_counter))
 
     json_obj["% at least 1 match"] = (1 - (num_matches_counter.get(0, 0) / sum(num_matches_counter.values()))) * 100
 
@@ -96,7 +87,6 @@ def eval_matches(
 
     add_stats_to_json("score range", stats_from_counter(score_range_counter))
     add_stats_to_json("average score range", stats_from_counter(avg_score_range_counter))
-    add_stats_to_json("average score", stats_from_counter(avg_score_range_counter))
 
     json_obj["by_instance"] = by_instance
 
