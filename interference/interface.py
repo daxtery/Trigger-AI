@@ -1,9 +1,9 @@
-from trigger.evaluation.match import eval_matches
-from trigger.evaluation.cluster import eval_cluster
-from trigger.scoring import ScoringCalculator, Scoring
-from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
-from trigger.transformers.transformer_pipeline import Instance, TransformerPipeline
-from trigger.clusters.processor import Processor
+from interference.evaluation.match import eval_matches
+from interference.evaluation.cluster import eval_cluster
+from interference.scoring import ScoringCalculator, Scoring
+from interference.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
+from interference.transformers.transformer_pipeline import Instance, TransformerPipeline
+from interference.clusters.processor import Processor
 
 from typing import Any, Dict, List, Optional, Tuple
 

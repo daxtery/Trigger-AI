@@ -1,4 +1,4 @@
-from trigger.clusters.processor import Processor
+from interference.clusters.processor import Processor
 import numpy as np
 from typing import Any, Dict, List, Tuple
 from scipy.spatial.distance import mahalanobis

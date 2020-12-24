@@ -1,4 +1,4 @@
-from trigger.clusters.processor import Processor
+from interference.clusters.processor import Processor
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy

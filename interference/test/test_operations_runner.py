@@ -1,11 +1,11 @@
 from pathlib import Path
-from trigger.transformers.transformer_pipeline import IdentityPipeline, NumpyToInstancePipeline, TransformerPipeline
-from trigger.clusters.processor import Processor
-from trigger.scoring import ScoringCalculator
-from trigger.util.json_encoder import EnhancedJSONEncoder
-from trigger.operations import Operation, OperationType
+from interference.transformers.transformer_pipeline import IdentityPipeline, NumpyToInstancePipeline, TransformerPipeline
+from interference.clusters.processor import Processor
+from interference.scoring import ScoringCalculator
+from interference.util.json_encoder import EnhancedJSONEncoder
+from interference.operations import Operation, OperationType
 
-from trigger.interface import Interface
+from interference.interface import Interface
 from typing import Any, Dict, List, Type
 
 import logging

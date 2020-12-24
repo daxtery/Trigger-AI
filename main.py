@@ -1,6 +1,6 @@
-from trigger.clusters.gturbo import GTurbo
-from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType
-from trigger.test.test_operations_runner import TestRunner
+from interference.clusters.gturbo import GTurbo
+from interference.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType
+from interference.test.test_operations_runner import TestRunner
 
 import numpy
 

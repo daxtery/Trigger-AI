@@ -1,5 +1,5 @@
-from trigger.transformers.transformer_pipeline import Instance
-from trigger.metrics.match import similarity_metric
+from interference.transformers.transformer_pipeline import Instance
+from interference.metrics.match import similarity_metric
 from typing import Any, Dict, Generic, TypeVar
 
 from dataclasses import dataclass, field

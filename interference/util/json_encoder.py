@@ -2,8 +2,8 @@ import copy
 import dataclasses
 from enum import Enum
 import json
-from trigger.transformers.transformer_pipeline import Instance
-from trigger.scoring import ScoringCalculator
+from interference.transformers.transformer_pipeline import Instance
+from interference.scoring import ScoringCalculator
 
 import numpy
 

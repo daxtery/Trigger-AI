@@ -1,8 +1,8 @@
 from collections import Counter
 import statistics
-from trigger.scoring import Scoring
-from trigger.transformers.transformer_pipeline import Instance
-from trigger.util.statistics import Stats, stats_from_counter, to_range
+from interference.scoring import Scoring
+from interference.transformers.transformer_pipeline import Instance
+from interference.util.statistics import Stats, stats_from_counter, to_range
 from typing import List
 
 

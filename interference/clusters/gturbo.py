@@ -7,7 +7,7 @@ import faiss
 
 from scipy.spatial.distance import cdist
 
-from trigger.clusters.processor import Processor
+from interference.clusters.processor import Processor
 
 import numpy as np
 

@@ -1,11 +1,11 @@
 import logging
-from trigger.util.statistics import stats_from_counter
+from interference.util.statistics import stats_from_counter
 import numpy
 
 from sklearn.metrics import silhouette_score
 from typing import Dict, Any, TYPE_CHECKING
 
-from trigger.metrics.match import similarity_metric
+from interference.metrics.match import similarity_metric
 
 from collections import Counter
 
@@ -14,7 +14,7 @@ logger = logging.getLogger('cluster')
 logger.setLevel(logging.INFO)
 
 if TYPE_CHECKING:
-    from trigger.interface import Interface
+    from interference.interface import Interface
 
 
 def compute_cluster_score(interface: "Interface") -> float:
