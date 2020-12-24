@@ -120,7 +120,7 @@ class TriggerInterface:
         return [
             scoring
             for scoring in scorings
-            if scoring.is_match
+            if scoring.is_similarity_match
         ]
 
     def calculate_scoring_between_value_and_tag(self, transformer_key: str, value: Any, tag: str) -> Optional[Scoring]:

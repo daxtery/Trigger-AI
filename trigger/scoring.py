@@ -2,7 +2,7 @@ from trigger.transformers.transformer_pipeline import Instance
 from trigger.metrics.match import similarity_metric
 from typing import Any, Dict, Generic, TypeVar
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 T = TypeVar('T')
 
@@ -12,7 +12,7 @@ class Scoring(Generic[T]):
     scored_tag: str
     similarity_score: float
 
-    is_match: bool
+    is_similarity_match: bool = field(repr=False)
 
 
 @dataclass()
