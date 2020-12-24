@@ -2,8 +2,8 @@ from collections import Counter
 import statistics
 from trigger.scoring import Scoring
 from trigger.transformers.transformer_pipeline import Instance
-from trigger.util.statistics import average_from_distribution, max_from_distribution, min_from_distribution, to_range
-from typing import List
+from trigger.util.statistics import Stats, average_from_distribution, extract_first_number_from_range, max_from_distribution, min_from_distribution, stats_from_counter, to_range
+from typing import Any, Dict, List, NewType, Tuple
 
 
 def eval_matches(
@@ -16,10 +16,14 @@ def eval_matches(
     num_matches_counter = Counter()
     num_potential_counter = Counter()
 
-    matches_range_counter = Counter()
+    matches_score_range_counter = Counter()
+    score_range_counter = Counter()
 
-    avg_similarity_range_counter = Counter()
-    avg_matches_range_counter = Counter()
+    avg_matches_score_range_counter = Counter()
+    avg_score_range_counter = Counter()
+
+    avg_matches_score_range_one_counter = Counter()
+    avg_score_range_one_counter = Counter()
 
     for instance, scorings in zip(instances_to_match, individual_scorings):
 
@@ -39,8 +43,8 @@ def eval_matches(
             'value': instance.value,
             '#matches': len(match_scores),
             '#potential': len(individual_scorings),
-            'avg similarities': statistics.mean(scoring_scores) if len(individual_scorings) > 0 else 0,
-            'avg matches': statistics.mean(match_scores) if len(match_scores) > 0 else 0,
+            'average score': statistics.mean(scoring_scores) if len(individual_scorings) > 0 else 0,
+            'average match score': statistics.mean(match_scores) if len(match_scores) > 0 else 0,
             'matches': list(matches)
         }
 
@@ -50,42 +54,50 @@ def eval_matches(
         num_potential_counter.update([these_results['#potential']])
 
         for match in matches:
-            matches_range_counter.update([to_range(match.similarity_score, 5)])
+            matches_score_range_counter.update([to_range(match.similarity_score, 5)])
+
+        for scoring in scorings:
+            score_range_counter.update([to_range(scoring.similarity_score, 5)])
 
         if len(match_scores) > 0:
-            avg_matches_range = to_range(these_results['avg matches'], 5)
-            avg_matches_range_counter = avg_matches_range_counter + \
-                Counter([avg_matches_range])
+            avg_matches_range = to_range(these_results['average match score'], 5)
+            avg_matches_score_range_counter += Counter([avg_matches_range])
+            
+            avg_matches_int = extract_first_number_from_range(to_range(these_results['average match score'], 1))
+            avg_matches_score_range_one_counter += Counter([avg_matches_int])
 
-        avg_similarity_range = to_range(these_results['avg similarities'], 5)
-        avg_similarity_range_counter = avg_similarity_range_counter + \
-            Counter([avg_similarity_range])
+        avg_score_range = to_range(these_results['average score'], 5)
+        avg_score_range_counter += Counter([avg_score_range])
 
-    matches_count_distribution = {
-        score: count
-        for score, count in num_matches_counter.most_common()
-    }
+        avg_score_int = extract_first_number_from_range(to_range(these_results['average score'], 1))
+        avg_score_range_one_counter += Counter([avg_score_int])
 
-    potential_count_distribution = {
-        score: count
-        for score, count in num_potential_counter.most_common()
-    }
+    json_obj = {}
 
-    return {
-        "distribution #matches": matches_count_distribution,
-        "distribution #potential": potential_count_distribution,
-        "distribution avg similarity range": {range_: count
-                                              for range_, count in avg_similarity_range_counter.most_common()},
-        "distribution avg matches range": {range_: count for range_, count in avg_matches_range_counter.most_common()},
-        "distribution matches range": {range_: count for range_, count in matches_range_counter.most_common()},
-        "% at least 1 match": 1 - (num_matches_counter.get(0, 0) / sum(num_matches_counter.values())),
-        "avg #matches": average_from_distribution(matches_count_distribution),
-        "max #matches of a value": max_from_distribution(matches_count_distribution),
-        "min #matches of a value": min_from_distribution(matches_count_distribution),
-        "avg #potential": average_from_distribution(potential_count_distribution),
-        "max #potential of a value": max_from_distribution(potential_count_distribution),
-        "min #potential of a value": min_from_distribution(potential_count_distribution),
-        "avg matches score": statistics.mean([value["avg matches"] for value in by_instance]),
-        "avg similarity score": statistics.mean([value["avg similarities"] for value in by_instance]),
-        "by_instance": by_instance
-    }
+    def add_stats_to_json(name: str, stats: Stats):
+        nonlocal json_obj
+        distribution, number_stats = stats
+        json_obj[f"distribution {name}"] = distribution
+
+        if (number_stats):
+            avg, max, min = number_stats
+            json_obj[f"avg {name}"]= avg
+            json_obj[f"max {name}"]= max
+            json_obj[f"min {name}"]= min
+
+    add_stats_to_json("#matches", stats_from_counter(num_matches_counter))
+    add_stats_to_json("matches score range", stats_from_counter(matches_score_range_counter))
+    add_stats_to_json("average matches score range", stats_from_counter(avg_matches_score_range_counter))
+    add_stats_to_json("average matches score", stats_from_counter(avg_matches_score_range_counter))
+
+    json_obj["% at least 1 match"] = (1 - (num_matches_counter.get(0, 0) / sum(num_matches_counter.values()))) * 100
+
+    add_stats_to_json("#potential", stats_from_counter(num_potential_counter))
+
+    add_stats_to_json("score range", stats_from_counter(score_range_counter))
+    add_stats_to_json("average score range", stats_from_counter(avg_score_range_counter))
+    add_stats_to_json("average score", stats_from_counter(avg_score_range_counter))
+
+    json_obj["by_instance"] = by_instance
+
+    return json_obj
