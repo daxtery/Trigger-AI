@@ -1,3 +1,11 @@
+from collections import Counter
+from typing import Any, Dict, Optional, Tuple
+
+
+Min = float
+Max = float
+Avg = float
+Distribution = Dict[Any, int]
 Range = str
 
 
@@ -26,7 +34,28 @@ def max_from_distribution(distribution) -> float:
                in distribution.keys())
 
 
-def min_from_distribution(distribution) -> float:
+def min_from_distribution(distribution: Distribution) -> float:
     return min(int(number)
                for number
                in distribution.keys())
+
+
+Stats = Tuple[Distribution, Optional[Tuple[Avg, Max, Min]]]
+
+
+def stats_from_counter(counter: Counter) -> Stats:
+
+    distribution = {
+        score: count
+        for score, count in counter.most_common()
+    }
+
+    first = counter.most_common()[0][0]
+
+    if(isinstance(first, int)):
+        max = max_from_distribution(distribution)
+        min = min_from_distribution(distribution)
+        avg = average_from_distribution(distribution)
+        return distribution, (avg, max, min)
+
+    return distribution, None
