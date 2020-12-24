@@ -81,7 +81,7 @@ def eval_matches(
 
         if (number_stats):
             avg, max, min = number_stats
-            json_obj[f"avg {name}"]= avg
+            json_obj[f"average {name}"]= avg
             json_obj[f"max {name}"]= max
             json_obj[f"min {name}"]= min
 
