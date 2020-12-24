@@ -18,6 +18,10 @@ class Scoring(Generic[T]):
     def is_match(self) -> bool:
         return self.is_similarity_match
 
+    @property
+    def score(self) -> float:
+        return self.similarity_score
+
 
 @dataclass()
 class ScoringOptions:

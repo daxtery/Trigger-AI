@@ -25,14 +25,14 @@ def eval_matches(
     for instance, scorings in zip(instances_to_match, individual_scorings):
 
         scoring_scores = [
-            scoring.similarity_score
+            scoring.score
             for scoring in scorings
         ]
 
         matches = list(filter(lambda scoring: scoring.is_match, scorings))
 
         match_scores = [
-            match.similarity_score
+            match.score
             for match in matches
         ]
 
