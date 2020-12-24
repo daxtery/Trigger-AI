@@ -107,11 +107,11 @@ class TestRunner:
 
         if self.only_output_evaluates:
             if operation.type in [OperationType.EVALUATE_CLUSTERS, OperationType.EVALUATE_MATCHES, OperationType.EVALUATE_CLUSTERS_AND_MATCHES]:
-                return { "Operation": operation, "Result": result }
+                return { "OperationType": operation.type, "Result": result }
             else:
                 return None
 
-        return { "Operation": operation, "Result": result }
+        return { "Operation": operation.type, "Result": result }
 
 
     def _get_file_path(self, processor: Processor, output_type: str):
