@@ -5,15 +5,17 @@ from scipy.spatial.distance import mahalanobis
 
 class ClusterNode:
 
-    def __init__(self, id, instance, initial_std) -> None:
+    def __init__(self, id, instance: np.ndarray, initial_std: float, dimensions: int) -> None:
 
         self.id = id
-        self.cov_matrix = np.eye(1024)
+        self.dimensions = dimensions
+
+        self.cov_matrix = np.eye(dimensions)
         self.std = initial_std
         self.mean = instance
         self.instances = [instance]
 
-        i_observation = instance.reshape((1024, 1))
+        i_observation = instance.reshape((dimensions, 1))
 
         self.observations = i_observation
 
@@ -21,7 +23,7 @@ class ClusterNode:
 
         self.instances.append(instance)
 
-        self.observations = np.hstack([self.observations, instance.reshape((1024, 1))])
+        self.observations = np.hstack([self.observations, instance.reshape((self.dimensions, 1))])
 
         self.cov_matrix = np.cov(self.observations)
 
@@ -34,12 +36,13 @@ class ClusterNode:
 
 class CovarianceCluster(Processor):
 
-    def __init__(self, initial_std=0.01) -> None:
+    def __init__(self, dimensions: int, initial_std=0.01) -> None:
 
         self.initial_std = initial_std
         self.tag_to_cluster: Dict[str, int] = {}
         self.id = 0
         self.clusters: Dict[int, ClusterNode] = {}
+        self.dimensions = dimensions
 
     def add_to_cluster(self, tag, instance) -> None:
 
@@ -95,7 +98,7 @@ class CovarianceCluster(Processor):
         id = self.id
         self.id += 1
 
-        new_node = ClusterNode(id, instance, self.initial_std)
+        new_node = ClusterNode(id, instance, self.initial_std, self.dimensions)
 
         self.clusters[id] = new_node
 
