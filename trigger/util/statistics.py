@@ -1,6 +1,9 @@
-def to_range(percentage: float, step: int) -> str:
+Range = str
+
+
+def to_range(percentage: float, step: int) -> Range:
     lower = (int(percentage * 100) // step) * step
-    upper = lower + step
+    upper = min(lower + step, 100)
     return f"{lower} - {upper}"
 
 
