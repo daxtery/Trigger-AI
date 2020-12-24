@@ -1,7 +1,7 @@
 from trigger.clusters.covariance import CovarianceCluster
 from trigger.clusters.ecm import ECM
 from trigger.clusters.gturbo import GTurbo
-from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersAndMatchesInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType
+from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType
 from trigger.test.test_operations_runner import TestRunner
 
 import numpy
@@ -39,7 +39,7 @@ t = TestRunner(
         Operation(OperationType.CALCULATE_MATCHES, info = cm),
         Operation(OperationType.EVALUATE_CLUSTERS, EvaluateClustersInfo()),
         fantastic,
-        Operation(OperationType.EVALUATE_CLUSTERS_AND_MATCHES, EvaluateClustersAndMatchesInfo(values=[cm], fetch_instance=True)),
+        Operation(OperationType.EVALUATE_MATCHES, EvaluateMatchesInfo(values=[cm], fetch_instance=True)),
     ]
 )
 

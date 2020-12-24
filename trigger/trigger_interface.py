@@ -1,7 +1,7 @@
 from trigger.evaluation.match import eval_matches
 from trigger.evaluation.cluster import eval_cluster
 from trigger.scoring import ScoringCalculator, Scoring
-from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersAndMatchesInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
+from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
 from trigger.transformers.transformer_pipeline import Instance, TransformerPipeline
 from trigger.clusters.processor import Processor
 
@@ -211,20 +211,6 @@ class TriggerInterface:
             del evaluation["by_instance"]
 
         return evaluation
-
-    def on_operation_evaluate_clusters_and_matches(self, operation: Operation):
-        evaluate_clusters_and_matches_info: EvaluateClustersAndMatchesInfo = operation.info
-
-        clusters_evaluation = eval_cluster(self)
-        matches_evaluation = self._evaluate_matches_inner(evaluate_clusters_and_matches_info.values)
-
-        if not evaluate_clusters_and_matches_info.fetch_instance:
-            del matches_evaluation["by_value"]
-
-        results = clusters_evaluation
-        results['matches_results'] = matches_evaluation
-
-        return results
     
     def on_operation_evaluate_clusters(self, operation: Operation):
         evaluate_clusters_info: EvaluateClustersInfo = operation.info
@@ -246,8 +232,6 @@ class TriggerInterface:
             return self.on_operation_evaluate_clusters(operation)
         if operation.type == OperationType.EVALUATE_MATCHES:
             return self.on_operation_evaluate_matches(operation)
-        if operation.type == OperationType.EVALUATE_CLUSTERS_AND_MATCHES:
-            return self.on_operation_evaluate_clusters_and_matches(operation)
 
 
     def describe(self) -> Dict[str, Any]:

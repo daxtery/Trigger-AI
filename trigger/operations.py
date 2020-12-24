@@ -13,7 +13,6 @@ class OperationType(Enum):
     CALCULATE_SCORES = 4
     EVALUATE_CLUSTERS = 5
     EVALUATE_MATCHES = 6
-    EVALUATE_CLUSTERS_AND_MATCHES = 7
 
 
 T = TypeVar('T')
@@ -51,10 +50,6 @@ class EvaluateMatchesInfo():
     fetch_instance: bool = field(default=True, repr=False)
 
 
-@dataclass()
-class EvaluateClustersAndMatchesInfo(EvaluateClustersInfo, EvaluateMatchesInfo):
-    pass
-
 
 OT = TypeVar('OT',
              AddInfo,
@@ -64,7 +59,6 @@ OT = TypeVar('OT',
              CalculateMatchesInfo,
              EvaluateClustersInfo,
              EvaluateMatchesInfo,
-             EvaluateClustersAndMatchesInfo
              )
 
 

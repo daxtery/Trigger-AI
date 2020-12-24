@@ -106,7 +106,7 @@ class TestRunner:
     def after_operation_treat_result(self, interface: TriggerInterface, operation: Operation, result):
 
         if self.only_output_evaluates:
-            if operation.type in [OperationType.EVALUATE_CLUSTERS, OperationType.EVALUATE_MATCHES, OperationType.EVALUATE_CLUSTERS_AND_MATCHES]:
+            if operation.type in [OperationType.EVALUATE_CLUSTERS, OperationType.EVALUATE_MATCHES]:
                 return { "OperationType": operation.type, "Result": result }
             else:
                 return None
