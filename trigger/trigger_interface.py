@@ -1,6 +1,6 @@
+from trigger.evaluation.match import eval_matches
+from trigger.evaluation.cluster import eval_cluster
 from trigger.scoring import ScoringCalculator, Scoring
-from trigger.test.match import eval_matches
-from trigger.test.cluster import eval_cluster
 from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersAndMatchesInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
 from trigger.transformers.transformer_pipeline import Instance, TransformerPipeline
 from trigger.clusters.processor import Processor
