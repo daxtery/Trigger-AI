@@ -29,7 +29,7 @@ def eval_matches(
             for scoring in scorings
         ]
 
-        matches = list(filter(lambda scoring: scoring.is_similarity_match, scorings))
+        matches = list(filter(lambda scoring: scoring.is_match, scorings))
 
         match_scores = [
             match.similarity_score

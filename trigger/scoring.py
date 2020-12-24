@@ -14,6 +14,10 @@ class Scoring(Generic[T]):
 
     is_similarity_match: bool = field(repr=False)
 
+    @property
+    def is_match(self) -> bool:
+        return self.is_similarity_match
+
 
 @dataclass()
 class ScoringOptions:
