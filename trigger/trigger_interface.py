@@ -196,12 +196,16 @@ class TriggerInterface:
         
         return all_instances, all_scorings
     
+    def _evaluate_matches_inner(self, values: List[CalculateMatchesInfo]):
+
+        instances, scorings = self._calculate_operation_matches_inner(values)
+
+        return eval_matches(instances, scorings)
+    
     def on_operation_evaluate_matches(self, operation: Operation):
         evaluate_matches_info: EvaluateMatchesInfo = operation.info
 
-        instances, scorings = self._calculate_operation_matches_inner(evaluate_matches_info.values)
-
-        evaluation = eval_matches(instances, scorings)
+        evaluation = self._evaluate_matches_inner(evaluate_matches_info.values)
 
         if not evaluate_matches_info.fetch_instance:
             del evaluation["by_instance"]
@@ -210,11 +214,9 @@ class TriggerInterface:
 
     def on_operation_evaluate_clusters_and_matches(self, operation: Operation):
         evaluate_clusters_and_matches_info: EvaluateClustersAndMatchesInfo = operation.info
+
         clusters_evaluation = eval_cluster(self)
-
-        instances, scorings = self._calculate_operation_matches_inner(evaluate_clusters_and_matches_info.values)
-
-        matches_evaluation = eval_matches(instances, scorings)
+        matches_evaluation = self._evaluate_matches_inner(evaluate_clusters_and_matches_info.values)
 
         if not evaluate_clusters_and_matches_info.fetch_instance:
             del matches_evaluation["by_value"]
