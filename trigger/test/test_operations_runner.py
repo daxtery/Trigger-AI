@@ -32,7 +32,8 @@ class TestRunner:
         },
         scoring_calculator: ScoringCalculator = ScoringCalculator(),
         only_output_evaluates: bool = True,
-        output_path: str = ".",
+        output_base_folder: str = "",
+        use_last_folder_name_as_processor_class: bool = True,
         output_type: str = 'json',
         skip_done: bool = False,
     ):
@@ -40,7 +41,12 @@ class TestRunner:
         self.param_grid = param_grid
         self.operations = operations
         self.only_output_evaluates = only_output_evaluates
-        self.output_path = output_path
+        
+        if use_last_folder_name_as_processor_class:
+            self.output_folder = output_base_folder + processor_class.__name__
+        else:
+            self.output_folder = output_base_folder
+
         self.skip_done = skip_done
         self.transformers = transformers
         self.scoring_calculator = scoring_calculator
@@ -116,7 +122,7 @@ class TestRunner:
 
     def _get_file_path(self, processor: Processor, output_type: str):
         file_name = processor.safe_file_name()
-        return os.path.join(self.output_path, F"{file_name}.{output_type}")
+        return os.path.join(self.output_folder, F"{file_name}.{output_type}")
 
     def _save_results_json(self, file_path: str, interface: TriggerInterface, result, json_cls: Type[json.JSONEncoder] = None):
 

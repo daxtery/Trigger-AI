@@ -1,5 +1,3 @@
-from trigger.clusters.covariance import CovarianceCluster
-from trigger.clusters.ecm import ECM
 from trigger.clusters.gturbo import GTurbo
 from trigger.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType
 from trigger.test.test_operations_runner import TestRunner
@@ -22,11 +20,6 @@ ev = EvaluateMatchesInfo(values=[
     cm
 ], fetch_instance=True)
 
-fantastic = Operation(
-    OperationType.EVALUATE_MATCHES,
-    ev
-)
-
 t = TestRunner(
     GTurbo,
     param_grid,
@@ -38,9 +31,8 @@ t = TestRunner(
         Operation(OperationType.CALCULATE_SCORES, info = CalculateScoringInfo(value=numpy.array([2, 2]))),
         Operation(OperationType.CALCULATE_MATCHES, info = cm),
         Operation(OperationType.EVALUATE_CLUSTERS, EvaluateClustersInfo()),
-        fantastic,
-        Operation(OperationType.EVALUATE_MATCHES, EvaluateMatchesInfo(values=[cm], fetch_instance=True)),
-    ]
+        Operation(OperationType.EVALUATE_MATCHES, ev),
+    ],
 )
 
 t.run_tests()
