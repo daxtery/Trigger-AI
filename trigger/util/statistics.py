@@ -50,12 +50,14 @@ def stats_from_counter(counter: Counter) -> Stats:
         for score, count in counter.most_common()
     }
 
-    first = counter.most_common()[0][0]
+    if len(counter) > 0:
 
-    if(isinstance(first, int)):
-        max = max_from_distribution(distribution)
-        min = min_from_distribution(distribution)
-        avg = average_from_distribution(distribution)
-        return distribution, (avg, max, min)
+        first = counter.most_common()[0][0]
+
+        if(isinstance(first, int)):
+            max = max_from_distribution(distribution)
+            min = min_from_distribution(distribution)
+            avg = average_from_distribution(distribution)
+            return distribution, (avg, max, min)
 
     return distribution, None
