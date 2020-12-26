@@ -1,6 +1,6 @@
 import heapq
 
-from typing import Any, List, Tuple, Optional, Dict
+from typing import Any, Sequence, Tuple, Optional, Dict
 
 import numpy as np
 import faiss
@@ -316,12 +316,12 @@ class GTurbo(Processor):
 
         return self.point_to_cluster[tag]
 
-    def get_tags_in_cluster(self, cluster_id: int) -> List[str]:
+    def get_tags_in_cluster(self, cluster_id: int) -> Sequence[str]:
 
         return [tag for tag, id in self.point_to_cluster.items() if id ==
                 cluster_id]
     
-    def get_cluster_ids(self) -> List[int]:
+    def get_cluster_ids(self) -> Sequence[int]:
         return [
             node
             for node in self.graph.nodes

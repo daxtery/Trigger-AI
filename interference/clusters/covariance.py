@@ -1,6 +1,6 @@
 from interference.clusters.processor import Processor
 import numpy as np
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Sequence, Tuple
 from scipy.spatial.distance import mahalanobis
 
 class ClusterNode:
@@ -122,12 +122,12 @@ class CovarianceCluster(Processor):
 
         return self.tag_to_cluster[tag]
 
-    def get_tags_in_cluster(self, cluster_id: int) -> List[str]:
+    def get_tags_in_cluster(self, cluster_id: int) -> Sequence[str]:
 
         return [tag for tag, id in self.tag_to_cluster.items() if id ==
                 cluster_id]
 
-    def get_cluster_ids(self) -> List[int]:
+    def get_cluster_ids(self) -> Sequence[int]:
         
         return [
             id for id

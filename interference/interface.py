@@ -5,7 +5,7 @@ from interference.operations import AddInfo, CalculateMatchesInfo, CalculateScor
 from interference.transformers.transformer_pipeline import Instance, TransformerPipeline
 from interference.clusters.processor import Processor
 
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, cast
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, cast, Sequence
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -15,15 +15,16 @@ logger.setLevel(logging.INFO)
 T = TypeVar('T')
 U = TypeVar('U')
 
+
 class Interface:
     def __init__(
         self,
         processor: Processor,
-        transformers: Dict[str, TransformerPipeline[Any]],
+        transformers: Dict[str, TransformerPipeline],
         scoring_calculator: ScoringCalculator = ScoringCalculator()
     ) -> None:
         self.processor: Processor = processor
-        self.transformers: Dict[str, TransformerPipeline[Any]] = transformers
+        self.transformers: Dict[str, TransformerPipeline] = transformers
         self.scoring_calculator = scoring_calculator
         self.instances_map: Dict[str, Instance] = {}
 
@@ -61,7 +62,7 @@ class Interface:
         del self.instances_map[tag]
         return True
 
-    def get_scorings_for(self, instance: Instance[T]) -> List[Scoring]:
+    def get_scorings_for(self, instance: Instance[T]) -> Sequence[Scoring]:
         
         if len(self.instances_map) == 0:
             return []
@@ -81,7 +82,7 @@ class Interface:
         return scorings
 
     
-    def get_matches_for(self, instance: Instance[T]) -> List[Scoring]:
+    def get_matches_for(self, instance: Instance[T]) -> Sequence[Scoring]:
 
         scorings = self.get_scorings_for(instance)
 
@@ -95,7 +96,7 @@ class Interface:
         return self.scoring_calculator(instance1, instance2)
     
     
-    def get_instances_by_tag(self, tags: List[str]) -> List[Instance]:
+    def get_instances_by_tag(self, tags: Sequence[str]) -> Sequence[Instance]:
         temp = [
             self.instances_map.get(tag, None)
             for tag in tags
@@ -146,14 +147,15 @@ class Interface:
 
         return self.get_matches_for(instance)
 
-    def _calculate_operation_matches_inner(self, values: List[CalculateMatchesInfo]) -> \
-            Tuple[List[Instance], List[List[Scoring]]]:
+    def _calculate_operation_matches_inner(self, values: Sequence[CalculateMatchesInfo]) -> \
+            Tuple[Sequence[Instance], Sequence[Sequence[Scoring]]]:
 
         all_instances: List[Instance] = []
-        all_scorings: List[List[Scoring]] = []
+        all_scorings: List[Sequence[Scoring]] = []
 
         for value_to_match in values:
             instance = self.try_create_instance_from_value(value_to_match.transformer_key, value_to_match.value)
+            
             if instance is None:
                 continue
         
@@ -165,7 +167,7 @@ class Interface:
         
         return all_instances, all_scorings
     
-    def _evaluate_matches_inner(self, values: List[CalculateMatchesInfo]):
+    def _evaluate_matches_inner(self, values: Sequence[CalculateMatchesInfo]):
 
         instances, scorings = self._calculate_operation_matches_inner(values)
 

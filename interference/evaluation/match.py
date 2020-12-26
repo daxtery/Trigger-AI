@@ -3,12 +3,12 @@ import statistics
 from interference.scoring import Scoring
 from interference.transformers.transformer_pipeline import Instance
 from interference.util.statistics import Stats, stats_from_counter, to_range
-from typing import List
+from typing import Sequence
 
 
 def eval_matches(
-        instances_to_match: List[Instance],
-        individual_scorings: List[List[Scoring]]
+        instances_to_match: Sequence[Instance],
+        individual_scorings: Sequence[Sequence[Scoring]]
         ):
 
     by_instance = []
