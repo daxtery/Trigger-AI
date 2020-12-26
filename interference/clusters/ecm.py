@@ -1,5 +1,5 @@
 from interference.clusters.processor import Processor
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy
 
@@ -17,24 +17,24 @@ class Cluster:
         self.tags = [tag]
         self.index = index
 
-    def add_radius(self, tag: str, instance: numpy.ndarray) -> None:
+    def add_radius(self, tag: str, embedding: numpy.ndarray) -> None:
         self.tags.append(tag)
 
-    def _adapt(self, distance: float, instance: numpy.ndarray):
-        direction = instance - self.center
+    def _adapt(self, distance: float, embedding: numpy.ndarray):
+        direction = embedding - self.center
         self.radius = distance / 2
-        self.center : numpy.ndarray = instance - (direction / np.linalg.norm(direction)) * self.radius
+        self.center : numpy.ndarray = embedding - (direction / np.linalg.norm(direction)) * self.radius
 
-    def add_threshold(self, distance: float, tag: str, instance: numpy.ndarray) -> None:
-        self.add_radius(tag, instance)
-        self._adapt(distance, instance)
+    def add_threshold(self, distance: float, tag: str, embedding: numpy.ndarray) -> None:
+        self.add_radius(tag, embedding)
+        self._adapt(distance, embedding)
 
-    def update_radius(self, tag: str, instance: numpy.ndarray) -> None:
+    def update_radius(self, tag: str, embedding: numpy.ndarray) -> None:
         pass
 
-    def update_threshold(self, distance: float, tag: str, instance: numpy.ndarray) -> None:
-        self.update_radius(tag, instance)
-        self._adapt(distance, instance)
+    def update_threshold(self, distance: float, tag: str, embedding: numpy.ndarray) -> None:
+        self.update_radius(tag, embedding)
+        self._adapt(distance, embedding)
 
     def remove(self, tag: str) -> None:
         self.tags.remove(tag)
@@ -58,41 +58,41 @@ class ECM(Processor):
         self.cached_cluster_centers: List[numpy.ndarray] = []
         self.cached_cluster_radiuses: List[float] = []
 
-    def update(self, tag: str, instance: numpy.ndarray) -> None:
-        result, (searched_index, searched_distance) = self._search_index_and_distance(instance)
+    def update(self, tag: str, embedding: numpy.ndarray) -> None:
+        result, (searched_index, searched_distance) = self._search_index_and_distance(embedding)
         old_index = self.get_cluster_by_tag(tag)
         old_cluster = self.clusters[old_index]
 
         if result == SearchResultType.OUTSIDE:
             self._remove_from_cluster(old_cluster, tag)
 
-            cluster = self._create_cluster(tag, instance)
+            cluster = self._create_cluster(tag, embedding)
             index = cluster.index
 
         elif result == SearchResultType.RADIUS:
             if searched_index == old_index:
-                old_cluster.update_radius(tag, instance)
+                old_cluster.update_radius(tag, embedding)
 
                 index = searched_index
             else:
                 self._remove_from_cluster(old_cluster, tag)
 
                 new_cluster = self.clusters[searched_index]
-                new_cluster.add_radius(tag, instance)
+                new_cluster.add_radius(tag, embedding)
 
                 index = searched_index
 
         # elif result == SearchResultType.THRESHOLD:
         else:
             if searched_index == old_index:
-                old_cluster.update_threshold(searched_distance, tag, instance)
+                old_cluster.update_threshold(searched_distance, tag, embedding)
 
                 index = searched_index
             else:
                 self._remove_from_cluster(old_cluster, tag)
 
                 new_cluster = self.clusters[searched_index]
-                new_cluster.add_threshold(searched_distance, tag, instance)
+                new_cluster.add_threshold(searched_distance, tag, embedding)
 
                 index = searched_index
 
@@ -104,8 +104,8 @@ class ECM(Processor):
         if len(cluster.tags) == 0:
             del self.clusters[cluster.index]
 
-    def _create_cluster(self, tag: str, instance: numpy.ndarray) -> Cluster:
-        cluster = Cluster(tag, instance, self.cluster_index)
+    def _create_cluster(self, tag: str, embedding: numpy.ndarray) -> Cluster:
+        cluster = Cluster(tag, embedding, self.cluster_index)
         self.clusters[self.cluster_index] = cluster
         self.cluster_index += 1
         return cluster
@@ -122,30 +122,30 @@ class ECM(Processor):
     def get_cluster_by_tag(self, tag: str) -> int:
         return self.tag_to_cluster[tag]
 
-    def get_tags_in_cluster(self, cluster_id: int) -> List[str]:
+    def get_tags_in_cluster(self, cluster_id: int) -> Sequence[str]:
         return self.clusters[cluster_id].tags
 
-    def get_cluster_ids(self) -> List[int]:
+    def get_cluster_ids(self) -> Sequence[int]:
         return list(self.clusters.keys())
 
-    def process(self, tag: str, instance: numpy.ndarray) -> None:
+    def process(self, tag: str, embedding: numpy.ndarray) -> None:
         if len(self.clusters) == 0:
-            cluster = self._create_cluster(tag, instance)
+            cluster = self._create_cluster(tag, embedding)
 
         else:
-            search_result, (index, distance) = self._search_index_and_distance(instance)
+            search_result, (index, distance) = self._search_index_and_distance(embedding)
 
             if search_result == SearchResultType.RADIUS:
                 cluster = self.clusters[index]
-                cluster.add_radius(tag, instance)
+                cluster.add_radius(tag, embedding)
 
             elif search_result == SearchResultType.THRESHOLD:
                 cluster = self.clusters[index]
-                cluster.add_threshold(distance, tag, instance)
+                cluster.add_threshold(distance, tag, embedding)
 
             # search_result == SearchResultType.OUTSIDE
             else:
-                cluster = self._create_cluster(tag, instance)
+                cluster = self._create_cluster(tag, embedding)
 
         self.tag_to_cluster[tag] = cluster.index
         self._invalidate_cached()
@@ -166,13 +166,13 @@ class ECM(Processor):
                 self.cached_cluster_radiuses.append(cluster.radius)
 
 
-    def _search_index_and_distance(self, instance: Any) -> \
+    def _search_index_and_distance(self, embedding: numpy.ndarray) -> \
             Tuple[SearchResultType, Tuple[int, float]]:
 
         self._ensure_cached()
 
         distances = cdist(
-            np.array([instance]),
+            np.array([embedding]),
             np.array(self.cached_cluster_centers),
             'euclidean'
         )[0]
@@ -215,8 +215,8 @@ class ECM(Processor):
     def safe_file_name(self) -> str:
         return f"ECM = distance_threshold={self.distance_threshold}"
 
-    def predict(self, instance: Any) -> int:
-        search_result, (index, _) = self._search_index_and_distance(instance)
+    def predict(self, embedding: numpy.ndarray) -> int:
+        search_result, (index, _) = self._search_index_and_distance(embedding)
 
         # FIXME: What should predict do in this case?
         if search_result == SearchResultType.OUTSIDE:
