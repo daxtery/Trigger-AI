@@ -18,8 +18,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_runner')
 logger.setLevel(logging.INFO)
 
-SCT = TypeVar("SCT", bound=ScoringCalculator)
-
 
 class TestRunner:
 
@@ -32,7 +30,7 @@ class TestRunner:
             "numpy": NumpyToInstancePipeline(),
             "identity": IdentityPipeline()
         },
-        scoring_calculator: SCT = ScoringCalculator(),
+        scoring_calculator: ScoringCalculator = ScoringCalculator(),
         only_output_evaluates: bool = True,
         output_base_folder: str = "",
         use_last_folder_name_as_processor_class: bool = True,
