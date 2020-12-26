@@ -5,65 +5,46 @@ from interference.operations import AddInfo, CalculateMatchesInfo, CalculateScor
 from interference.transformers.transformer_pipeline import Instance, TransformerPipeline
 from interference.clusters.processor import Processor
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, cast
 
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('interface')
 logger.setLevel(logging.INFO)
 
+T = TypeVar('T')
+U = TypeVar('U')
+
 class Interface:
     def __init__(
         self,
         processor: Processor,
-        transformers: Dict[str, TransformerPipeline],
+        transformers: Dict[str, TransformerPipeline[Any]],
         scoring_calculator: ScoringCalculator = ScoringCalculator()
     ) -> None:
         self.processor: Processor = processor
-        self.transformers: Dict[str, TransformerPipeline] = transformers
+        self.transformers: Dict[str, TransformerPipeline[Any]] = transformers
         self.scoring_calculator = scoring_calculator
         self.instances_map: Dict[str, Instance] = {}
 
-    def find_transformer_for_key(self, key: str) -> Optional[TransformerPipeline]:
-        transformer = self.transformers.get(key, None)
+    def try_get_transformer_for_key(self, key: str) -> Optional[TransformerPipeline]:
+        return self.transformers.get(key, None)
+
+    def try_create_instance_from_value(self, key: str, value: T) -> Optional[Instance[T]]:
+        transformer = self.try_get_transformer_for_key(key)
 
         if transformer is None:
-            logger.warning(f"No transformer with key='{key}'")
-        
-        return transformer
-
-    def create_instance_or_none(self, transformer_key: str, value: Any) -> Optional[Instance]:
-        transformer = self.find_transformer_for_key(transformer_key)
-
-        if transformer is None:
-            # TODO: LOG THIS
             return None
+
+        transformer = cast(TransformerPipeline[T], transformer)
 
         return transformer.transform(value)
 
-    def add(self, tag: str, transformer_key: str, value: Any) -> bool:
-        instance = self.create_instance_or_none(transformer_key, value)
-        
-        if instance is None:
-            return False
-
-        self.add_instance(tag, instance)
-        return True
-
-
-    def add_instance(self, tag: str, instance: Instance) -> None:
+    def add(self, tag: str, instance: Instance[T]) -> None:
         self.processor.process(tag, instance.embedding)
         self.instances_map[tag] = instance
 
-    def update(self, tag: str, transformer_key: str, value: Any) -> bool:
-        instance = self.create_instance_or_none(transformer_key, value)
-
-        if instance is None:
-            return False
-        
-        return self.update_instance(tag, instance)
-
-    def update_instance(self, tag: str, instance: Instance) -> bool:
+    def update(self, tag: str, instance: Instance[T]) -> bool:
         if not tag in self.instances_map:
             return False
         
@@ -80,15 +61,7 @@ class Interface:
         del self.instances_map[tag]
         return True
 
-    def get_scorings_for(self, transformer_key: str, value: Any) -> Optional[List[Scoring]]:
-        instance = self.create_instance_or_none(transformer_key, value)
-
-        if instance is None:
-            return None
-
-        return self.get_scorings_for_instance(instance)
-
-    def get_scorings_for_instance(self, instance: Instance) -> List[Scoring]:
+    def get_scorings_for(self, instance: Instance[T]) -> List[Scoring]:
         
         if len(self.instances_map) == 0:
             return []
@@ -96,26 +69,21 @@ class Interface:
         would_be_cluster_id = self.processor.predict(instance.embedding)
 
         tags = self.processor.get_tags_in_cluster(would_be_cluster_id)
+        instances = [ self.instances_map[tag] for tag in tags ]
 
-        temp = [
-            self.calculate_scoring_between_instance_and_tag_or_none(instance, tag)
-            for tag in tags
-        ]
+        scorings: List[Scoring] = []
 
-        return list(filter(None, temp))
+        for tag2, instance2 in zip(tags, instances):
+            scoring = self.calculate_scoring_between_instances(instance, instance2)
+            scoring.scored_tag = tag2
+            scorings.append(scoring)
+
+        return scorings
 
     
-    def get_matches_for(self, transformer_key: str, value: Any) -> Optional[List[Scoring]]:
-        instance = self.create_instance_or_none(transformer_key, value)
+    def get_matches_for(self, instance: Instance[T]) -> List[Scoring]:
 
-        if instance is None:
-            return None
-
-        return self.get_matches_for_instance(instance)
-    
-    def get_matches_for_instance(self, instance: Instance) -> List[Scoring]:
-
-        scorings = self.get_scorings_for_instance(instance)
+        scorings = self.get_scorings_for(instance)
 
         return [
             scoring
@@ -123,27 +91,8 @@ class Interface:
             if scoring.is_match
         ]
 
-    def calculate_scoring_between_value_and_tag(self, transformer_key: str, value: Any, tag: str) -> Optional[Scoring]:
-        instance = self.create_instance_or_none(transformer_key, value)
-
-        if instance is None:
-            return None
-
-        return self.calculate_scoring_between_instance_and_tag_or_none(instance, tag)
-
-    def calculate_scoring_between_instance_and_tag_or_none(self, instance: Instance, tag: str) -> Optional[Scoring]:
-        instances = self.get_instances_by_tag([tag])
-
-        if len(instances) == 0:
-            # TODO: LOG THIS
-            return None
-
-        instance2 = instances[0]
-
-        return self.calculate_scoring_between_instances(instance, tag, instance2)
-
-    def calculate_scoring_between_instances(self, instance1: Instance, tag2: str, instance2: Instance) -> Scoring:
-        return self.scoring_calculator(instance1, tag2, instance2)
+    def calculate_scoring_between_instances(self, instance1: Instance[T], instance2: Instance[U]) -> Scoring:
+        return self.scoring_calculator(instance1, instance2)
     
     
     def get_instances_by_tag(self, tags: List[str]) -> List[Instance]:
@@ -154,28 +103,48 @@ class Interface:
 
         return list(filter(None, temp))
 
-    def on_operation_add(self, operation: Operation):
+    def on_operation_add(self, operation: Operation[AddInfo]):
         add_info: AddInfo = operation.info
-        return self.add(add_info.tag, add_info.transformer_key, add_info.value)
+        instance = self.try_create_instance_from_value(add_info.transformer_key, add_info.value)
 
-    def on_operation_update(self, operation: Operation):
+        if instance is None:
+            return None
+
+        return self.add(add_info.tag, instance)
+
+    def on_operation_update(self, operation: Operation[UpdateInfo]):
+        update_info: UpdateInfo = operation.info
+
+        instance = self.try_create_instance_from_value(update_info.transformer_key, update_info.value)
+
+        if instance is None:
+            return None
+
+        return self.update(update_info.tag, instance)
+
+    def on_operation_remove(self, operation: Operation[RemoveInfo]):
         remove_info: RemoveInfo = operation.info
         return self.remove(remove_info.tag)
-
-    def on_operation_remove(self, operation: Operation):
-        update_info: UpdateInfo = operation.info
-        return self.update(update_info.tag, update_info.transformer_key, update_info.value)
     
-    def on_operation_calculate_scores(self, operation: Operation):
+    def on_operation_calculate_scores(self, operation: Operation[CalculateScoringInfo]):
         calculate_scoring_info: CalculateScoringInfo = operation.info
-        return self.get_scorings_for(
-            calculate_scoring_info.transformer_key,
-            calculate_scoring_info.value,
-        )
+
+        instance = self.try_create_instance_from_value(calculate_scoring_info.transformer_key, calculate_scoring_info.value)
+
+        if instance is None:
+            return None
+
+        return self.get_scorings_for(instance)
     
-    def on_operation_calculate_matches(self, operation: Operation):
+    def on_operation_calculate_matches(self, operation: Operation[CalculateMatchesInfo]):
         calculate_matches_info: CalculateMatchesInfo = operation.info
-        return self.get_matches_for(calculate_matches_info.transformer_key, calculate_matches_info.value)
+
+        instance = self.try_create_instance_from_value(calculate_matches_info.transformer_key, calculate_matches_info.value)
+
+        if instance is None:
+            return None
+
+        return self.get_matches_for(instance)
 
     def _calculate_operation_matches_inner(self, values: List[CalculateMatchesInfo]) -> \
             Tuple[List[Instance], List[List[Scoring]]]:
@@ -184,13 +153,13 @@ class Interface:
         all_scorings: List[List[Scoring]] = []
 
         for value_to_match in values:
-            instance = self.create_instance_or_none(value_to_match.transformer_key, value_to_match.value)
+            instance = self.try_create_instance_from_value(value_to_match.transformer_key, value_to_match.value)
             if instance is None:
                 continue
         
             all_instances.append(instance)
 
-            scorings = self.get_scorings_for_instance(instance)
+            scorings = self.get_scorings_for(instance)
 
             all_scorings.append(scorings)
         
@@ -202,7 +171,7 @@ class Interface:
 
         return eval_matches(instances, scorings)
     
-    def on_operation_evaluate_matches(self, operation: Operation):
+    def on_operation_evaluate_matches(self, operation: Operation[EvaluateMatchesInfo]):
         evaluate_matches_info: EvaluateMatchesInfo = operation.info
 
         evaluation = self._evaluate_matches_inner(evaluate_matches_info.values)
@@ -212,7 +181,7 @@ class Interface:
 
         return evaluation
     
-    def on_operation_evaluate_clusters(self, operation: Operation):
+    def on_operation_evaluate_clusters(self, operation: Operation[EvaluateClustersInfo]):
         evaluate_clusters_info: EvaluateClustersInfo = operation.info
         return eval_cluster(self)
 
@@ -220,18 +189,20 @@ class Interface:
         
         if operation.type == OperationType.ADD: 
             return self.on_operation_add(operation)
-        if operation.type == OperationType.REMOVE:
+        elif operation.type == OperationType.REMOVE:
             return self.on_operation_remove(operation)
-        if operation.type == OperationType.UPDATE:
+        elif operation.type == OperationType.UPDATE:
             return self.on_operation_update(operation)
-        if operation.type == OperationType.CALCULATE_SCORES:
+        elif operation.type == OperationType.CALCULATE_SCORES:
             return self.on_operation_calculate_scores(operation)
-        if operation.type == OperationType.CALCULATE_MATCHES:
+        elif operation.type == OperationType.CALCULATE_MATCHES:
             return self.on_operation_calculate_matches(operation)
-        if operation.type == OperationType.EVALUATE_CLUSTERS:
+        elif operation.type == OperationType.EVALUATE_CLUSTERS:
             return self.on_operation_evaluate_clusters(operation)
-        if operation.type == OperationType.EVALUATE_MATCHES:
+        elif operation.type == OperationType.EVALUATE_MATCHES:
             return self.on_operation_evaluate_matches(operation)
+        else:
+            pass
 
 
     def describe(self) -> Dict[str, Any]:
