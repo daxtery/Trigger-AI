@@ -1,18 +1,18 @@
 from interference.transformers.transformer_pipeline import Instance
 from interference.metrics.match import similarity_metric
-from typing import Any, Dict, Generic, TypeVar
+from typing import Any, Dict, Generic, Optional, TypeVar
 
 from dataclasses import dataclass, field
 
-T = TypeVar('T')
 
+T = TypeVar('T')
+U = TypeVar('U')
 
 @dataclass()
-class Scoring(Generic[T]):
-    scored_tag: str
+class Scoring():
     similarity_score: float
-
     is_similarity_match: bool = field(repr=False)
+    scored_tag: Optional[str] = None
 
     @property
     def is_match(self) -> bool:
@@ -21,7 +21,6 @@ class Scoring(Generic[T]):
     @property
     def score(self) -> float:
         return self.similarity_score
-
 
 @dataclass()
 class ScoringOptions:
@@ -33,9 +32,9 @@ class ScoringCalculator:
     def __init__(self, scoring_options: ScoringOptions = ScoringOptions()):
         self.scoring_options = scoring_options
 
-    def __call__(self, instance1: Instance, tag: str, instance2: Instance) -> Scoring:
+    def __call__(self, instance1: Instance[T], instance2: Instance[U]) -> Scoring:
         similarity_score = similarity_metric(instance1.embedding, instance2.embedding)
-        return Scoring(tag, similarity_score, similarity_score >= self.scoring_options.score_to_be_match)
+        return Scoring(similarity_score, similarity_score >= self.scoring_options.score_to_be_match)
 
     def describe(self) -> Dict[str, Any]:
         return {
