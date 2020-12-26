@@ -14,6 +14,7 @@ logger.setLevel(logging.INFO)
 
 T = TypeVar('T')
 U = TypeVar('U')
+SCT = TypeVar('SCT', bound=ScoringCalculator)
 
 
 class Interface:
@@ -21,7 +22,7 @@ class Interface:
         self,
         processor: Processor,
         transformers: Dict[str, TransformerPipeline],
-        scoring_calculator: ScoringCalculator = ScoringCalculator()
+        scoring_calculator: SCT
     ) -> None:
         self.processor: Processor = processor
         self.transformers: Dict[str, TransformerPipeline] = transformers

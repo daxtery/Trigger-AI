@@ -6,7 +6,7 @@ from interference.util.json_encoder import EnhancedJSONEncoder
 from interference.operations import Operation, OperationType
 
 from interference.interface import Interface
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Type, TypeVar
 
 import logging
 
@@ -17,6 +17,8 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_runner')
 logger.setLevel(logging.INFO)
+
+SCT = TypeVar("SCT", bound=ScoringCalculator)
 
 
 class TestRunner:
@@ -30,7 +32,7 @@ class TestRunner:
             "numpy": NumpyToInstancePipeline(),
             "identity": IdentityPipeline()
         },
-        scoring_calculator: ScoringCalculator = ScoringCalculator(),
+        scoring_calculator: SCT = ScoringCalculator(),
         only_output_evaluates: bool = True,
         output_base_folder: str = "",
         use_last_folder_name_as_processor_class: bool = True,
@@ -69,8 +71,8 @@ class TestRunner:
         return test_items
 
     def init_inferface(self, params) -> Interface:
-        processor = self.processor_class(**params)
-        return Interface(processor, self.transformers, self.scoring_calculator)
+        processor = self.processor_class(**params) #type: ignore
+        return Interface(processor, self.transformers, self.scoring_calculator) #type: ignore
 
     def run_tests(self):
 
