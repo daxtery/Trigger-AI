@@ -3,8 +3,42 @@ import statistics
 from interference.scoring import Scoring
 from interference.transformers.transformer_pipeline import Instance
 from interference.util.statistics import Stats, stats_from_counter, to_range
-from typing import Sequence
+from typing import Dict, Sequence
+import numpy as np
 
+def bin_deviation_score(
+        test_distribution: Dict[str, int],
+        to_compare_distribution: Dict[str, int]
+    ) -> float:
+
+    def normed_interval(range: str, maxi: int, mini: int) -> float:
+        upper_bound = eval(range.split('-')[-1].strip())
+        return (upper_bound - mini)/(maxi - mini)
+    
+    test_ranges = set(test_distribution.keys())
+    to_compare_ranges = set(to_compare_distribution.keys())
+
+    all_ranges = test_ranges.union(to_compare_ranges)
+
+    all_ranges_lower_bound = [int(range.split("-")[0].strip()) for range in all_ranges]
+
+    min_range_bound = min(all_ranges_lower_bound)
+    max_range_bound = max(all_ranges_lower_bound)
+
+    scores = []
+
+    for range in all_ranges:
+
+        test_range = test_distribution.get(range, 0)
+        to_compare_range = to_compare_distribution.get(range, 0)
+
+        diff = test_range - to_compare_range
+
+        w_diff = diff * np.exp(normed_interval(range, max_range_bound, min_range_bound))
+
+        scores.append(w_diff)
+
+    return np.sum(scores)
 
 def eval_matches(
         instances_to_match: Sequence[Instance],
