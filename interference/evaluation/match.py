@@ -21,9 +21,10 @@ def bin_deviation_score(
     all_ranges = test_ranges.union(to_compare_ranges)
 
     all_ranges_lower_bound = [int(range.split("-")[0].strip()) for range in all_ranges]
+    all_ranges_upper_bound = [int(range.split("-")[1].strip()) for range in all_ranges]
 
     min_range_bound = min(all_ranges_lower_bound)
-    max_range_bound = max(all_ranges_lower_bound)
+    max_range_bound = max(all_ranges_upper_bound)
 
     scores = []
 
