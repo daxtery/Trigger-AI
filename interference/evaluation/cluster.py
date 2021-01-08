@@ -60,7 +60,7 @@ def eval_cluster(interface: "Interface") -> Dict[str, Any]:
 
     tags = interface.instances_map.keys()
     labels = []
-    instances = []
+    embeddings = []
     labels_set = set()
 
     for tag in tags:
@@ -70,11 +70,11 @@ def eval_cluster(interface: "Interface") -> Dict[str, Any]:
 
         labels_set.add(label)
     
-        instances.append(interface.instances_map[tag])
+        embeddings.append(interface.instances_map[tag].embedding)
 
     try:
 
-        Ss = silhouette_score(instances, labels) # type: ignore
+        Ss = silhouette_score(embeddings, labels) # type: ignore
     except:
 
         Ss = -1.0
