@@ -66,3 +66,4 @@ OT = TypeVar('OT',
 class Operation(Generic[OT]):
     type: OperationType
     info: OT
+
