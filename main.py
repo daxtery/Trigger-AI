@@ -1,5 +1,5 @@
 from interference.clusters.gturbo import GTurbo
-from interference.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType
+from interference.test.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
 from interference.test.test_operations_runner import TestRunner
 
 import numpy
@@ -28,6 +28,9 @@ t = TestRunner(
         Operation(OperationType.ADD, AddInfo(tag="2", value=numpy.array([1, 2]))),
         Operation(OperationType.ADD, AddInfo(tag="3", value=numpy.array([1, 3]))),
         Operation(OperationType.ADD, AddInfo(tag="4", value=numpy.array([1, 4]))),
+        Operation(OperationType.UPDATE, UpdateInfo(tag="4", value=numpy.array([18, 16]))),
+        Operation(OperationType.REMOVE, RemoveInfo(tag="4")),
+        Operation(OperationType.ADD, AddInfo(tag="4", value=numpy.array([18, 16]))),
         Operation(OperationType.CALCULATE_SCORES, info = CalculateScoringInfo(value=numpy.array([2, 2]))),
         Operation(OperationType.CALCULATE_MATCHES, info = cm),
         Operation(OperationType.EVALUATE_CLUSTERS, EvaluateClustersInfo()),
