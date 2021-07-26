@@ -1,3 +1,5 @@
+import numpy
+
 from interference.evaluation.match import eval_matches
 from interference.evaluation.cluster import eval_cluster
 from interference.scoring import ScoringCalculator, Scoring
@@ -13,7 +15,6 @@ logger = logging.getLogger('interface')
 logger.setLevel(logging.INFO)
 
 T = TypeVar('T')
-U = TypeVar('U')
 
 
 class Interface:
@@ -26,7 +27,7 @@ class Interface:
         self.processor: Processor = processor
         self.transformers: Dict[str, TransformerPipeline] = transformers
         self.scoring_calculator = scoring_calculator
-        self.instances_map: Dict[str, Instance] = {}
+        self.embeddings_map: Dict[str, numpy.ndarray] = {}
 
     def try_get_transformer_for_key(self, key: str) -> Optional[TransformerPipeline]:
         return self.transformers.get(key, None)
@@ -41,49 +42,48 @@ class Interface:
 
         return transformer.transform(value)
 
-    def add(self, tag: str, instance: Instance[T]) -> None:
+    def add(self, tag: str, instance: Instance) -> None:
         self.processor.process(tag, instance.embedding)
-        self.instances_map[tag] = instance
+        self.embeddings_map[tag] = instance.embedding
 
-    def update(self, tag: str, instance: Instance[T]) -> bool:
-        if not tag in self.instances_map:
+    def update(self, tag: str, instance: Instance) -> bool:
+        if not tag in self.embeddings_map:
             return False
         
         self.processor.update(tag, instance.embedding)
-        self.instances_map[tag] = instance
+        self.embeddings_map[tag] = instance.embedding
 
         return True
 
     def remove(self, tag: str) -> bool:
-        if not tag in self.instances_map:
+        if not tag in self.embeddings_map:
             return False
 
         self.processor.remove(tag)
-        del self.instances_map[tag]
+        del self.embeddings_map[tag]
         return True
 
-    def get_scorings_for(self, instance: Instance[T]) -> Sequence[Scoring]:
+    def get_scorings_for(self, instance: Instance):
         
-        if len(self.instances_map) == 0:
+        if len(self.embeddings_map) == 0:
             return []
 
         would_be_cluster_id = self.processor.predict(instance.embedding)
 
         tags = self.processor.get_tags_in_cluster(would_be_cluster_id)
-        instances = [ self.instances_map[tag] for tag in tags ]
+        embeddings = [ self.embeddings_map[tag] for tag in tags ]
 
         scorings: List[Scoring] = []
 
-        for tag2, instance2 in zip(tags, instances):
-            scoring = self.calculate_scoring_between_instances(instance, instance2)
+        for tag2, embedding2 in zip(tags, embeddings):
+            scoring = self.calculate_scoring_between_embeddings(instance.embedding, embedding2)
             scoring.scored_tag = tag2
             scorings.append(scoring)
 
         return scorings
 
     
-    def get_matches_for(self, instance: Instance[T]) -> Sequence[Scoring]:
-
+    def get_matches_for(self, instance: Instance) -> Sequence[Scoring]:
         scorings = self.get_scorings_for(instance)
 
         return [
@@ -92,17 +92,21 @@ class Interface:
             if scoring.is_match
         ]
 
-    def calculate_scoring_between_instances(self, instance1: Instance[T], instance2: Instance[U]) -> Scoring:
-        return self.scoring_calculator(instance1, instance2)
-    
-    
-    def get_instances_by_tag(self, tags: Sequence[str]) -> Sequence[Instance]:
-        temp = [
-            self.instances_map.get(tag, None)
-            for tag in tags
-        ]
 
-        return list(filter(None, temp))
+    def calculate_scoring_between_instances(self, instance1: Instance, instance2: Instance) -> Scoring:
+        return self.calculate_scoring_between_embeddings(instance1.embedding, instance2.embedding)
+
+
+    def calculate_scoring_between_embeddings(self, embedding1: numpy.ndarray, embedding2: numpy.ndarray) -> Scoring:
+        return self.scoring_calculator(embedding1, embedding2)
+
+
+    def get_embeddings_by_tag(self, tags: Sequence[str]):
+        return [
+            self.embeddings_map[tag]
+            for tag in tags
+            if tag in self.embeddings_map
+        ]
 
     def on_operation_add(self, operation: Operation[AddInfo]):
         add_info: AddInfo = operation.info

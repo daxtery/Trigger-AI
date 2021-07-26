@@ -32,12 +32,12 @@ def compute_cluster_score(interface: "Interface") -> float:
             node_similarities = [1.0]
 
         else:
-            instances_in_cluster = interface.get_instances_by_tag(tags_in_cluster) 
+            embeddings_in_cluster = list(interface.get_embeddings_by_tag(tags_in_cluster))
 
             node_similarities = [
-                similarity_metric(test_instance.embedding, compare_instance.embedding)
-                for i, test_instance in enumerate(instances_in_cluster[:-1])
-                for compare_instance in instances_in_cluster[i + 1:]
+                similarity_metric(test_embedding, compare_embedding)
+                for i, test_embedding in enumerate(embeddings_in_cluster[:-1])
+                for compare_embedding in embeddings_in_cluster[i + 1:]
             ]
 
         sim_mean = numpy.mean(node_similarities)
@@ -58,7 +58,7 @@ def compute_cluster_score(interface: "Interface") -> float:
 
 def eval_cluster(interface: "Interface") -> Dict[str, Any]:
 
-    tags = interface.instances_map.keys()
+    tags = interface.embeddings_map.keys()
     labels = []
     embeddings = []
     labels_set = set()
@@ -70,7 +70,7 @@ def eval_cluster(interface: "Interface") -> Dict[str, Any]:
 
         labels_set.add(label)
     
-        embeddings.append(interface.instances_map[tag].embedding)
+        embeddings.append(interface.embeddings_map[tag])
 
     try:
 
