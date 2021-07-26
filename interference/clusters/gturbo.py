@@ -307,7 +307,6 @@ class GTurbo(Processor):
     def remove(self, tag: str) -> None:
 
         node_id = self.point_to_cluster.pop(tag)
-        del self.point_to_cluster[tag]
 
         node = self.graph.get_node(node_id)
         node.remove_instance(tag)
