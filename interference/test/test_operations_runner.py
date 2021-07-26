@@ -3,10 +3,13 @@ from interference.transformers.transformer_pipeline import IdentityPipeline, Num
 from interference.clusters.processor import Processor
 from interference.scoring import ScoringCalculator
 from interference.util.json_encoder import EnhancedJSONEncoder
-from interference.operations import Operation, OperationType
 
 from interference.interface import Interface
-from typing import Any, Dict, List, Type, TypeVar
+
+from interference.test.implementations import on_operation
+from interference.test.operations import Operation, OperationType
+
+from typing import Any, Dict, List, Sequence, Type, TypeVar
 
 import logging
 
@@ -101,7 +104,7 @@ class TestRunner:
         results = []
 
         for operation in self.operations:
-            result = interface.on_operation(operation)
+            result = on_operation(interface, operation)
             if result is None:
                 continue
             treated_result = self.after_operation_treat_result(interface, operation, result)

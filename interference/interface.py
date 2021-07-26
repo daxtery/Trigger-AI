@@ -1,9 +1,7 @@
 import numpy
 
-from interference.evaluation.match import eval_matches
-from interference.evaluation.cluster import eval_cluster
+
 from interference.scoring import ScoringCalculator, Scoring
-from interference.operations import AddInfo, CalculateMatchesInfo, CalculateScoringInfo, EvaluateClustersInfo, EvaluateMatchesInfo, Operation, OperationType, RemoveInfo, UpdateInfo
 from interference.transformers.transformer_pipeline import Instance, TransformerPipeline
 from interference.clusters.processor import Processor
 
@@ -107,107 +105,6 @@ class Interface:
             for tag in tags
             if tag in self.embeddings_map
         ]
-
-    def on_operation_add(self, operation: Operation[AddInfo]):
-        add_info: AddInfo = operation.info
-        instance = self.try_create_instance_from_value(add_info.transformer_key, add_info.value)
-
-        if instance is None:
-            return None
-
-        return self.add(add_info.tag, instance)
-
-    def on_operation_update(self, operation: Operation[UpdateInfo]):
-        update_info: UpdateInfo = operation.info
-
-        instance = self.try_create_instance_from_value(update_info.transformer_key, update_info.value)
-
-        if instance is None:
-            return None
-
-        return self.update(update_info.tag, instance)
-
-    def on_operation_remove(self, operation: Operation[RemoveInfo]):
-        remove_info: RemoveInfo = operation.info
-        return self.remove(remove_info.tag)
-    
-    def on_operation_calculate_scores(self, operation: Operation[CalculateScoringInfo]):
-        calculate_scoring_info: CalculateScoringInfo = operation.info
-
-        instance = self.try_create_instance_from_value(calculate_scoring_info.transformer_key, calculate_scoring_info.value)
-
-        if instance is None:
-            return None
-
-        return self.get_scorings_for(instance)
-    
-    def on_operation_calculate_matches(self, operation: Operation[CalculateMatchesInfo]):
-        calculate_matches_info: CalculateMatchesInfo = operation.info
-
-        instance = self.try_create_instance_from_value(calculate_matches_info.transformer_key, calculate_matches_info.value)
-
-        if instance is None:
-            return None
-
-        return self.get_matches_for(instance)
-
-    def _calculate_operation_matches_inner(self, values: Sequence[CalculateMatchesInfo]):
-
-        all_instances: List[Instance] = []
-        all_scorings: List[Sequence[Scoring]] = []
-
-        for value_to_match in values:
-            instance = self.try_create_instance_from_value(value_to_match.transformer_key, value_to_match.value)
-            
-            if instance is None:
-                continue
-        
-            all_instances.append(instance)
-
-            scorings = self.get_scorings_for(instance)
-
-            all_scorings.append(scorings)
-        
-        return all_instances, all_scorings
-    
-    def _evaluate_matches_inner(self, values: Sequence[CalculateMatchesInfo]):
-
-        instances, scorings = self._calculate_operation_matches_inner(values)
-
-        return eval_matches(instances, scorings)
-    
-    def on_operation_evaluate_matches(self, operation: Operation[EvaluateMatchesInfo]):
-        evaluate_matches_info: EvaluateMatchesInfo = operation.info
-
-        evaluation = self._evaluate_matches_inner(evaluate_matches_info.values)
-
-        if not evaluate_matches_info.fetch_instance:
-            del evaluation["by_instance"]
-
-        return evaluation
-    
-    def on_operation_evaluate_clusters(self, operation: Operation[EvaluateClustersInfo]):
-        return eval_cluster(self)
-
-    def on_operation(self, operation: Operation):
-        
-        if operation.type == OperationType.ADD: 
-            return self.on_operation_add(operation)
-        elif operation.type == OperationType.REMOVE:
-            return self.on_operation_remove(operation)
-        elif operation.type == OperationType.UPDATE:
-            return self.on_operation_update(operation)
-        elif operation.type == OperationType.CALCULATE_SCORES:
-            return self.on_operation_calculate_scores(operation)
-        elif operation.type == OperationType.CALCULATE_MATCHES:
-            return self.on_operation_calculate_matches(operation)
-        elif operation.type == OperationType.EVALUATE_CLUSTERS:
-            return self.on_operation_evaluate_clusters(operation)
-        elif operation.type == OperationType.EVALUATE_MATCHES:
-            return self.on_operation_evaluate_matches(operation)
-        else:
-            pass
-
 
     def describe(self):
         return {
