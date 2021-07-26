@@ -24,15 +24,15 @@ class Interface:
         transformers: Dict[str, TransformerPipeline],
         scoring_calculator: ScoringCalculator
     ) -> None:
-        self.processor: Processor = processor
-        self.transformers: Dict[str, TransformerPipeline] = transformers
+        self.processor = processor
+        self.transformers = transformers
         self.scoring_calculator = scoring_calculator
         self.embeddings_map: Dict[str, numpy.ndarray] = {}
 
-    def try_get_transformer_for_key(self, key: str) -> Optional[TransformerPipeline]:
+    def try_get_transformer_for_key(self, key: str):
         return self.transformers.get(key, None)
 
-    def try_create_instance_from_value(self, key: str, value: T) -> Optional[Instance[T]]:
+    def try_create_instance_from_value(self, key: str, value: T):
         transformer = self.try_get_transformer_for_key(key)
 
         if transformer is None:
@@ -42,11 +42,11 @@ class Interface:
 
         return transformer.transform(value)
 
-    def add(self, tag: str, instance: Instance) -> None:
+    def add(self, tag: str, instance: Instance):
         self.processor.process(tag, instance.embedding)
         self.embeddings_map[tag] = instance.embedding
 
-    def update(self, tag: str, instance: Instance) -> bool:
+    def update(self, tag: str, instance: Instance):
         if not tag in self.embeddings_map:
             return False
         
@@ -55,7 +55,7 @@ class Interface:
 
         return True
 
-    def remove(self, tag: str) -> bool:
+    def remove(self, tag: str):
         if not tag in self.embeddings_map:
             return False
 
@@ -83,7 +83,7 @@ class Interface:
         return scorings
 
     
-    def get_matches_for(self, instance: Instance) -> Sequence[Scoring]:
+    def get_matches_for(self, instance: Instance):
         scorings = self.get_scorings_for(instance)
 
         return [
@@ -93,11 +93,11 @@ class Interface:
         ]
 
 
-    def calculate_scoring_between_instances(self, instance1: Instance, instance2: Instance) -> Scoring:
+    def calculate_scoring_between_instances(self, instance1: Instance, instance2: Instance):
         return self.calculate_scoring_between_embeddings(instance1.embedding, instance2.embedding)
 
 
-    def calculate_scoring_between_embeddings(self, embedding1: numpy.ndarray, embedding2: numpy.ndarray) -> Scoring:
+    def calculate_scoring_between_embeddings(self, embedding1: numpy.ndarray, embedding2: numpy.ndarray):
         return self.scoring_calculator(embedding1, embedding2)
 
 
@@ -151,8 +151,7 @@ class Interface:
 
         return self.get_matches_for(instance)
 
-    def _calculate_operation_matches_inner(self, values: Sequence[CalculateMatchesInfo]) -> \
-            Tuple[Sequence[Instance], Sequence[Sequence[Scoring]]]:
+    def _calculate_operation_matches_inner(self, values: Sequence[CalculateMatchesInfo]):
 
         all_instances: List[Instance] = []
         all_scorings: List[Sequence[Scoring]] = []
@@ -188,7 +187,6 @@ class Interface:
         return evaluation
     
     def on_operation_evaluate_clusters(self, operation: Operation[EvaluateClustersInfo]):
-        evaluate_clusters_info: EvaluateClustersInfo = operation.info
         return eval_cluster(self)
 
     def on_operation(self, operation: Operation):
@@ -211,7 +209,7 @@ class Interface:
             pass
 
 
-    def describe(self) -> Dict[str, Any]:
+    def describe(self):
         return {
             "transformers": { key: transformer.__class__.__name__  for key, transformer in self.transformers.items() },
             "scoring_calculator": self.scoring_calculator.describe()
