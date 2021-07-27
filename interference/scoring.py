@@ -1,11 +1,9 @@
 import numpy
 from interference.metrics.match import similarity_metric
-from typing import Any, Dict, Optional, TypeVar
+from typing import Any, Dict, Optional
 
 from dataclasses import dataclass, field
 
-T = TypeVar('T')
-U = TypeVar('U')
 
 @dataclass()
 class Scoring():
