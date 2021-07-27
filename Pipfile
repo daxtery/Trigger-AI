@@ -13,6 +13,3 @@ scipy = "*"
 [dev-packages]
 pipenv-setup = "*"
 autopep8 = "*"
-
-[requires]
-python_version = "3.7"
