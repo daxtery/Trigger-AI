@@ -125,7 +125,7 @@ setup(
     # and refuse to install the project if the version does not match. If you
     # do not support Python 2, you can simplify this to '>=3.5' or similar, see
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-    python_requires=">=3.7.*",
+    python_requires=">=3.6.*",
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
     # installed, so they must be valid existing projects.
@@ -133,14 +133,14 @@ setup(
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        "faiss-cpu==1.7.1.post2",
-        "joblib==1.0.1",
-        "numpy==1.21.1",
-        "scikit-learn==0.24.2",
-        "scipy==1.7.0",
+        "faiss-cpu==1.6.5",
+        "joblib==1.0.0; python_version >= '3.6'",
+        "numpy==1.19.4",
+        "scikit-learn==0.24.0; python_version >= '3.6'",
+        "scipy==1.5.4",
         "sklearn==0.0",
-        "threadpoolctl==2.2.0",
-        "typing-extensions==3.10.0.0",
+        "threadpoolctl==2.1.0; python_version >= '3.5'",
+        "typing-extensions==3.7.4.3",
     ],  # Optional
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
